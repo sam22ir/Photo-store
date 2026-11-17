@@ -4,6 +4,8 @@ Lamsa Studio turns a phone photo of a product into a professional picture. Selle
 
 The whole site runs on one Cloudflare Worker. It uses a free-tier database (D1) for accounts and history, and a storage bucket (R2) for pictures and receipts.
 
+> **Already done for you:** the D1 database `lamsa-db` is created (its ID is in `wrangler.toml`), its tables are set up, and the R2 bucket `lamsa-images` is created. Skip steps 1–3 below and start at step 4.
+
 ## Setup on Cloudflare
 
 1. **Create the database.** In the Cloudflare dashboard, go to Storage & Databases, then D1. Create a database named `lamsa-db`. Copy its ID and paste it in `wrangler.toml`, replacing `PASTE_D1_ID_HERE`.
