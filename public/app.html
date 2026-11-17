@@ -61,6 +61,22 @@
         </button>
       </div>
 
+      <h2 class="section-title" data-i18n="size_title">3. Choose a size</h2>
+      <div class="sizes" id="sizes">
+        <button type="button" class="size-opt" data-size="square" aria-pressed="true">
+          <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="4" y="4" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span data-i18n="size_square">Square</span><small data-i18n="size_square_d">Instagram post (1:1)</small>
+        </button>
+        <button type="button" class="size-opt" data-size="tall" aria-pressed="false">
+          <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="7" y="3" width="16" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span data-i18n="size_tall">Tall</span><small data-i18n="size_tall_d">Stories / TikTok (2:3)</small>
+        </button>
+        <button type="button" class="size-opt" data-size="wide" aria-pressed="false">
+          <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="3" y="7" width="24" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span data-i18n="size_wide">Wide</span><small data-i18n="size_wide_d">Facebook (3:2)</small>
+        </button>
+      </div>
+
       <div class="field" id="textField" hidden>
         <label for="adText" data-i18n="text_label">Text for the ad (name, price)</label>
         <input id="adText" class="input" maxlength="300" data-i18n-ph="text_ph" placeholder="e.g. Leather bag - 3500 DA">
@@ -81,16 +97,19 @@
 
 <script src="assets/i18n.js"></script>
 <script src="assets/app.js"></script>
+<script src="assets/compare.js"></script>
 <script>
   const $ = (id) => document.getElementById(id);
   const t = (k) => window.i18n.t(k);
   const alertEl = $('alert');
   const STYLES = ['studio', 'luxury', 'outdoor', 'ad'];
+  const SIZES = { square: '1 / 1', tall: '2 / 3', wide: '3 / 2' };
   const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   const MAX = 8 * 1024 * 1024;
 
   let credits = 0;
   let style = 'studio';
+  let size = 'square';
   let file = null;
   let items = [];
 
@@ -98,17 +117,41 @@
     $('credits').textContent = t('credits_left').replace('{n}', credits);
   }
 
+  function buildCard(g) {
+    const sizeName = SIZES[g.size] ? g.size : 'square';
+    const article = document.createElement('article');
+    article.className = 'gen';
+
+    const compare = createCompare(g.input_url, g.output_url, {
+      beforeLabel: t('cmp_before'),
+      afterLabel: t('cmp_after'),
+    });
+    compare.style.aspectRatio = SIZES[sizeName];
+
+    const body = document.createElement('div');
+    body.className = 'gen-body';
+
+    const styleLabel = document.createElement('span');
+    styleLabel.textContent = t('st_' + g.style);
+
+    const badge = document.createElement('span');
+    badge.className = 'badge size-badge';
+    badge.textContent = t('size_' + sizeName);
+
+    const download = document.createElement('a');
+    download.className = 'btn btn-ghost btn-sm';
+    download.href = g.output_url;
+    download.download = `lamsa-${g.id}.png`;
+    download.textContent = t('download');
+
+    body.append(styleLabel, badge, download);
+    article.append(compare, body);
+    return article;
+  }
+
   function renderGallery() {
-    const gallery = $('gallery');
     $('emptyRes').hidden = items.length > 0;
-    gallery.innerHTML = items.map((g) => `
-      <article class="gen">
-        <img src="${esc(g.output_url)}" alt="">
-        <div class="gen-body">
-          <span>${esc(t('st_' + g.style))}</span>
-          <a class="btn btn-ghost btn-sm" href="${esc(g.output_url)}" download="lamsa-${esc(g.id)}.png">${esc(t('download'))}</a>
-        </div>
-      </article>`).join('');
+    $('gallery').replaceChildren(...items.map(buildCard));
   }
 
   async function loadGallery() {
@@ -147,8 +190,19 @@
     $('dropEmpty').hidden = true;
   }
 
+  function setSize(next) {
+    size = next;
+    document.querySelectorAll('.size-opt').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.size === next));
+    });
+  }
+
   document.querySelectorAll('.style-opt').forEach((b) => {
     b.addEventListener('click', () => setStyle(b.dataset.style));
+  });
+
+  document.querySelectorAll('.size-opt').forEach((b) => {
+    b.addEventListener('click', () => setSize(b.dataset.size));
   });
 
   $('file').addEventListener('change', (e) => pickFile(e.target.files[0]));
@@ -178,6 +232,7 @@
     const fd = new FormData();
     fd.append('image', file);
     fd.append('style', style);
+    fd.append('size', size);
     fd.append('text', $('adText').value);
 
     const btn = $('genBtn');
@@ -187,7 +242,13 @@
       const result = await api('/api/generate', { method: 'POST', form: fd });
       credits = result.credits;
       renderCredits();
-      items.unshift({ id: result.id, style: result.style, output_url: result.output_url });
+      items.unshift({
+        id: result.id,
+        style: result.style,
+        size: result.size,
+        input_url: result.input_url,
+        output_url: result.output_url,
+      });
       renderGallery();
     } catch (err) {
       showAlert(alertEl, err.message);
@@ -209,6 +270,7 @@
     renderCredits();
     if (user.is_admin) $('adminLink').hidden = false;
     setStyle(style);
+    setSize(size);
     await loadGallery();
   })();
 </script>

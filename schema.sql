@@ -46,3 +46,6 @@ CREATE TABLE IF NOT EXISTS payments (
 );
 CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status, created_at);
 CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
+
+-- Migration: image size choice (run once on existing databases; fails if the column already exists)
+ALTER TABLE generations ADD COLUMN size TEXT;

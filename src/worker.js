@@ -13,6 +13,12 @@ const STYLES = {
   ad: 'Instagram square ad poster with a bold layout',
 };
 
+const SIZES = {
+  square: '1024x1024',
+  tall: '1024x1536',
+  wide: '1536x1024',
+};
+
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_BYTES = 8 * 1024 * 1024;
 const SESSION_MS = 30 * 24 * 3600 * 1000;
@@ -215,11 +221,13 @@ async function generate(request, env) {
   const file = form.get('image');
   const style = String(form.get('style') || '');
   const text = style === 'ad' ? String(form.get('text') || '').trim().slice(0, 300) : '';
+  const sizeName = String(form.get('size') || 'square');
 
   if (!(file instanceof File)) fail(400, 'Please upload a product photo.');
   if (!IMAGE_TYPES.includes(file.type)) fail(400, 'Use a JPG, PNG or WebP image.');
   if (file.size > MAX_BYTES) fail(413, 'The image must be 8 MB or smaller.');
   if (!Object.prototype.hasOwnProperty.call(STYLES, style)) fail(400, 'Please choose a valid style.');
+  if (!Object.prototype.hasOwnProperty.call(SIZES, sizeName)) fail(400, 'Please choose a valid size.');
 
   const id = crypto.randomUUID();
   const inputKey = `inputs/${id}`;
@@ -234,7 +242,7 @@ async function generate(request, env) {
   upstreamBody.append('model', env.IMAGE_MODEL);
   upstreamBody.append('image', file, file.name || 'product.png');
   upstreamBody.append('prompt', prompt);
-  upstreamBody.append('size', '1024x1024');
+  upstreamBody.append('size', SIZES[sizeName]);
   upstreamBody.append('n', '1');
 
   let upstream;
@@ -285,16 +293,18 @@ async function generate(request, env) {
   }
 
   await env.DB.prepare(
-    `INSERT INTO generations (id, user_id, style, input_key, output_key, prompt, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, 'done', ?)`
+    `INSERT INTO generations (id, user_id, style, size, input_key, output_key, prompt, status, created_at)
+     VALUES (?, ?, ?, ?, ?, ?, ?, 'done', ?)`
   )
-    .bind(id, user.id, style, inputKey, outputKey, prompt, Date.now())
+    .bind(id, user.id, style, sizeName, inputKey, outputKey, prompt, Date.now())
     .run();
 
   return json(
     {
       id,
       style,
+      size: sizeName,
+      input_key: inputKey,
       input_url: `/files/${inputKey}`,
       output_url: `/files/${outputKey}`,
       credits: user.credits - 1,
@@ -306,7 +316,7 @@ async function generate(request, env) {
 async function listGenerations(request, env) {
   const user = await requireUser(request, env);
   const rows = await env.DB.prepare(
-    `SELECT id, style, input_key, output_key, status, created_at
+    `SELECT id, style, size, input_key, output_key, status, created_at
        FROM generations WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`
   )
     .bind(user.id)
@@ -316,8 +326,10 @@ async function listGenerations(request, env) {
     rows.results.map((r) => ({
       id: r.id,
       style: r.style,
+      size: r.size || 'square',
       status: r.status,
       created_at: r.created_at,
+      input_key: r.input_key,
       input_url: `/files/${r.input_key}`,
       output_url: `/files/${r.output_key}`,
     }))
