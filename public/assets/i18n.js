@@ -1,0 +1,226 @@
+// Lamsa Studio translations (English, French, Arabic) and a tiny language switcher.
+(function () {
+  const D = {
+    en: {
+      nav_how: 'How it works', nav_styles: 'Styles', nav_pricing: 'Pricing', nav_faq: 'FAQ',
+      login: 'Log in', logout: 'Log out', nav_dash: 'Dashboard', admin_link: 'Admin',
+      buy_more: 'Buy credits', back_home: 'Back to home',
+      footer_text: '© 2026 Lamsa Studio · Tebessa, Algeria',
+      hero_title: 'Turn a phone photo into a picture that sells.',
+      hero_sub: 'Upload a simple photo of your product, pick a style, and get a clean professional picture for your Instagram or Facebook shop in about one minute.',
+      hero_try: 'Try 3 pictures free', hero_examples: 'See examples',
+      ba_before: 'Phone photo', ba_after: 'Lamsa Studio',
+      steps_title: 'Three steps. One minute.',
+      step1_t: 'Upload', step1_d: 'Take a photo with your phone and upload it. A simple or messy background is fine.',
+      step2_t: 'Choose a style', step2_d: 'Studio, luxury, outdoor or ad poster. For the ad, add your text or price.',
+      step3_t: 'Download', step3_d: 'Your picture is ready in about a minute. Download it and post it.',
+      styles_title: 'Four styles for your products', styles_sub: 'Every picture keeps your product exactly as it is.',
+      st_studio: 'Studio', st_studio_d: 'Clean white background with soft shadows.',
+      st_luxury: 'Luxury', st_luxury_d: 'Dark, elegant background with dramatic light.',
+      st_outdoor: 'Outdoor', st_outdoor_d: 'Natural daylight, lifestyle scene.',
+      st_ad: 'Ad poster', st_ad_d: 'Square Instagram ad with your text and price.',
+      example_ph: '[Example image]',
+      pricing_title: 'Credit packs', pricing_sub: 'One credit makes one picture. Pay once, use them when you need them.',
+      pk_credits: 'credits', pk_choose: 'Choose this pack', most_popular: 'Most popular',
+      pay_title: 'How to pay',
+      pay_text: 'Pay with BaridiMob or CCP, then upload a photo of the receipt. We check it and add your credits, usually within a few hours.',
+      faq_title: 'Questions',
+      faq1_q: 'Does the AI change my product?', faq1_a: 'No. The model is told to keep the product identical in shape, colour and label. Check the result before you post.',
+      faq2_q: 'Do I get free pictures?', faq2_a: 'Yes. Every new account gets 3 free credits to try the service.',
+      faq3_q: 'What if a picture fails?', faq3_a: 'You are not charged. A credit is only used when your picture is ready.',
+      faq4_q: 'How long does approval take?', faq4_a: 'We check each receipt by hand. Your credits appear once it is approved.',
+      final_title: 'Make your next product picture today.', final_btn: 'Start with 3 free pictures',
+      tab_login: 'Log in', tab_signup: 'Sign up', f_name: 'Full name', f_email: 'Email',
+      f_phone: 'Phone (optional)', f_password: 'Password', f_password_hint: 'At least 8 characters',
+      btn_login: 'Log in', btn_signup: 'Create account', login_title: 'Welcome to Lamsa Studio',
+      err_network: 'Network error. Please try again.',
+      dash_title: 'Make a product picture', credits_left: '{n} credits left',
+      upload_title: '1. Upload your product photo', upload_drop: 'Drop a photo here or click to choose',
+      upload_hint: 'JPG, PNG or WebP, up to 8 MB', choose_style: '2. Choose a style',
+      text_label: 'Text for the ad (name, price)', text_ph: 'e.g. Leather bag - 3500 DA',
+      text_hint: 'Write it exactly as it should appear. Arabic, French or English.',
+      generate: 'Generate picture', generating: 'Creating your picture...',
+      results_title: 'Your pictures', results_empty: 'Your pictures will appear here.',
+      download: 'Download', err_no_file: 'Choose a product photo first.',
+      not_enough: 'You have no credits left. Buy a pack to continue.',
+      file_type: 'Use a JPG, PNG or WebP image.', file_big: 'The image must be 8 MB or smaller.',
+      preview_alt: 'Your product photo',
+      buy_title: 'Buy credits', buy_sub: 'Choose a pack, pay by BaridiMob or CCP, then upload the receipt.',
+      step_pack: '1. Choose a pack', step_method: '2. Pay', method_bar: 'BaridiMob', method_ccp: 'CCP',
+      pay_bar_info: 'Send the payment to this BaridiMob RIP:', pay_ccp_info: 'Send the payment to this CCP account:',
+      pay_amount: 'Amount to send', pay_note: 'Write your email in the payment note so we can find it.',
+      step_receipt: '3. Upload the receipt', receipt_pick: 'Choose receipt image',
+      receipt_hint: 'Screenshot or photo, JPG, PNG or WebP, up to 8 MB', submit_receipt: 'Send receipt',
+      submitting: 'Sending...', sent_ok: 'Receipt sent. We will add your credits after review.',
+      my_payments: 'My payments', col_date: 'Date', col_pack: 'Pack', col_amount: 'Amount',
+      col_status: 'Status', no_payments: 'No payments yet.', view_receipt: 'View receipt',
+      status_pending: 'Pending', status_approved: 'Approved', status_rejected: 'Rejected',
+      err_pack: 'Choose a credit pack.', err_method: 'Choose BaridiMob or CCP.', err_receipt: 'Choose a receipt image.',
+      admin_title: 'Admin', stat_users: 'Users', stat_gens: 'Pictures made', stat_revenue: 'Approved revenue (DZD)',
+      pending_title: 'Pending payments', col_user: 'Customer', col_method: 'Method', col_receipt: 'Receipt',
+      col_actions: 'Actions', approve: 'Approve', reject: 'Reject', no_pending: 'No pending payments.',
+      admin_only: 'This page is for admins only.', confirm_approve: 'Approve this payment and add the credits?',
+      confirm_reject: 'Reject this payment?', done: 'Done.'
+    },
+    fr: {
+      nav_how: 'Comment ça marche', nav_styles: 'Styles', nav_pricing: 'Tarifs', nav_faq: 'FAQ',
+      login: 'Connexion', logout: 'Se déconnecter', nav_dash: 'Tableau de bord', admin_link: 'Admin',
+      buy_more: 'Acheter des crédits', back_home: "Retour à l'accueil",
+      footer_text: '© 2026 Lamsa Studio · Tébessa, Algérie',
+      hero_title: 'Transformez une photo du téléphone en image qui vend.',
+      hero_sub: "Envoyez une photo simple de votre produit, choisissez un style, et recevez en une minute une image professionnelle pour votre boutique Instagram ou Facebook.",
+      hero_try: 'Essayer 3 images gratuites', hero_examples: 'Voir des exemples',
+      ba_before: 'Photo du téléphone', ba_after: 'Lamsa Studio',
+      steps_title: 'Trois étapes. Une minute.',
+      step1_t: 'Envoyer', step1_d: 'Prenez une photo avec votre téléphone et envoyez-la. Un fond simple ou chargé convient.',
+      step2_t: 'Choisir un style', step2_d: 'Studio, luxe, extérieur ou affiche publicitaire. Pour la pub, ajoutez votre texte ou prix.',
+      step3_t: 'Télécharger', step3_d: "Votre image est prête en une minute. Téléchargez-la et publiez-la.",
+      styles_title: 'Quatre styles pour vos produits', styles_sub: 'Chaque image garde votre produit tel qu’il est.',
+      st_studio: 'Studio', st_studio_d: 'Fond blanc propre avec ombres douces.',
+      st_luxury: 'Luxe', st_luxury_d: 'Fond sombre et élégant, lumière dramatique.',
+      st_outdoor: 'Extérieur', st_outdoor_d: 'Scène de vie en lumière naturelle.',
+      st_ad: 'Affiche pub', st_ad_d: 'Pub carrée Instagram avec votre texte et prix.',
+      example_ph: "[Exemple d'image]",
+      pricing_title: 'Packs de crédits', pricing_sub: 'Un crédit = une image. Payez une fois, utilisez-les quand vous voulez.',
+      pk_credits: 'crédits', pk_choose: 'Choisir ce pack', most_popular: 'Le plus populaire',
+      pay_title: 'Comment payer',
+      pay_text: "Payez par BaridiMob ou CCP, puis envoyez une photo du reçu. Nous le vérifions et ajoutons vos crédits, en général sous quelques heures.",
+      faq_title: 'Questions',
+      faq1_q: "L'IA modifie-t-elle mon produit ?", faq1_a: "Non. Le modèle garde le produit identique en forme, couleur et étiquette. Vérifiez le résultat avant de publier.",
+      faq2_q: 'Ai-je des images gratuites ?', faq2_a: 'Oui. Chaque nouveau compte reçoit 3 crédits gratuits pour essayer le service.',
+      faq3_q: 'Et si une image échoue ?', faq3_a: "Vous n'êtes pas débité. Un crédit n'est utilisé que lorsque votre image est prête.",
+      faq4_q: "Combien de temps prend la validation ?", faq4_a: "Nous vérifions chaque reçu à la main. Vos crédits apparaissent après validation.",
+      final_title: 'Créez votre prochaine image produit aujourd’hui.', final_btn: 'Commencer avec 3 images gratuites',
+      tab_login: 'Connexion', tab_signup: 'Inscription', f_name: 'Nom complet', f_email: 'E-mail',
+      f_phone: 'Téléphone (facultatif)', f_password: 'Mot de passe', f_password_hint: 'Au moins 8 caractères',
+      btn_login: 'Se connecter', btn_signup: 'Créer le compte', login_title: 'Bienvenue sur Lamsa Studio',
+      err_network: 'Erreur réseau. Réessayez.',
+      dash_title: 'Créer une image produit', credits_left: '{n} crédits restants',
+      upload_title: '1. Envoyez la photo de votre produit', upload_drop: 'Déposez une photo ici ou cliquez pour choisir',
+      upload_hint: 'JPG, PNG ou WebP, 8 Mo maximum', choose_style: '2. Choisissez un style',
+      text_label: 'Texte pour la pub (nom, prix)', text_ph: 'ex. Sac en cuir - 3500 DA',
+      text_hint: 'Écrivez-le exactement comme il doit apparaître. Arabe, français ou anglais.',
+      generate: "Générer l'image", generating: 'Création de votre image...',
+      results_title: 'Vos images', results_empty: 'Vos images apparaîtront ici.',
+      download: 'Télécharger', err_no_file: "Choisissez d'abord une photo du produit.",
+      not_enough: 'Il ne vous reste plus de crédits. Achetez un pack pour continuer.',
+      file_type: 'Utilisez une image JPG, PNG ou WebP.', file_big: "L'image doit faire 8 Mo ou moins.",
+      preview_alt: 'Photo de votre produit',
+      buy_title: 'Acheter des crédits', buy_sub: 'Choisissez un pack, payez par BaridiMob ou CCP, puis envoyez le reçu.',
+      step_pack: '1. Choisissez un pack', step_method: '2. Payez', method_bar: 'BaridiMob', method_ccp: 'CCP',
+      pay_bar_info: 'Envoyez le paiement sur ce RIP BaridiMob :', pay_ccp_info: 'Envoyez le paiement sur ce compte CCP :',
+      pay_amount: 'Montant à envoyer', pay_note: 'Écrivez votre e-mail dans la note du paiement pour que nous le retrouvions.',
+      step_receipt: '3. Envoyez le reçu', receipt_pick: 'Choisir l’image du reçu',
+      receipt_hint: 'Capture ou photo, JPG, PNG ou WebP, 8 Mo maximum', submit_receipt: 'Envoyer le reçu',
+      submitting: 'Envoi...', sent_ok: 'Reçu envoyé. Vos crédits seront ajoutés après vérification.',
+      my_payments: 'Mes paiements', col_date: 'Date', col_pack: 'Pack', col_amount: 'Montant',
+      col_status: 'Statut', no_payments: 'Aucun paiement pour le moment.', view_receipt: 'Voir le reçu',
+      status_pending: 'En attente', status_approved: 'Validé', status_rejected: 'Refusé',
+      err_pack: 'Choisissez un pack de crédits.', err_method: 'Choisissez BaridiMob ou CCP.', err_receipt: "Choisissez l'image du reçu.",
+      admin_title: 'Admin', stat_users: 'Utilisateurs', stat_gens: 'Images créées', stat_revenue: 'Revenus validés (DZD)',
+      pending_title: 'Paiements en attente', col_user: 'Client', col_method: 'Méthode', col_receipt: 'Reçu',
+      col_actions: 'Actions', approve: 'Valider', reject: 'Refuser', no_pending: 'Aucun paiement en attente.',
+      admin_only: 'Cette page est réservée aux admins.', confirm_approve: 'Valider ce paiement et ajouter les crédits ?',
+      confirm_reject: 'Refuser ce paiement ?', done: 'Terminé.'
+    },
+    ar: {
+      nav_how: 'كيف يعمل', nav_styles: 'الأنماط', nav_pricing: 'الأسعار', nav_faq: 'الأسئلة',
+      login: 'تسجيل الدخول', logout: 'تسجيل الخروج', nav_dash: 'لوحة التحكم', admin_link: 'الإدارة',
+      buy_more: 'شراء رصيد', back_home: 'العودة إلى الرئيسية',
+      footer_text: '© 2026 Lamsa Studio · تبسة، الجزائر',
+      hero_title: 'حوّل صورة الهاتف إلى صورة تبيع.',
+      hero_sub: 'ارفع صورة بسيطة لمنتجك، اختر النمط، واحصل خلال دقيقة تقريباً على صورة احترافية لمتجرك على إنستغرام أو فيسبوك.',
+      hero_try: 'جرّب 3 صور مجاناً', hero_examples: 'شاهد الأمثلة',
+      ba_before: 'صورة من الهاتف', ba_after: 'Lamsa Studio',
+      steps_title: 'ثلاث خطوات. دقيقة واحدة.',
+      step1_t: 'ارفع الصورة', step1_d: 'صوّر منتجك بهاتفك وارفعها. لا بأس أن تكون الخلفية بسيطة أو غير مرتبة.',
+      step2_t: 'اختر النمط', step2_d: 'استوديو، فاخر، خارجي، أو ملصق إعلاني. للإعلان أضف النص أو السعر.',
+      step3_t: 'حمّل الصورة', step3_d: 'صورتك جاهزة خلال دقيقة تقريباً. حمّلها وانشرها.',
+      styles_title: 'أربعة أنماط لمنتجاتك', styles_sub: 'كل صورة تحافظ على منتجك كما هو تماماً.',
+      st_studio: 'استوديو', st_studio_d: 'خلفية بيضاء نظيفة مع ظلال ناعمة.',
+      st_luxury: 'فاخر', st_luxury_d: 'خلفية داكنة أنيقة مع إضاءة درامية.',
+      st_outdoor: 'خارجي', st_outdoor_d: 'مشهد طبيعي بضوء النهار.',
+      st_ad: 'ملصق إعلاني', st_ad_d: 'إعلان مربع لإنستغرام مع نصك وسعرك.',
+      example_ph: '[صورة توضيحية]',
+      pricing_title: 'حزم الرصيد', pricing_sub: 'رصيد واحد يساوي صورة واحدة. ادفع مرة واحدة واستعمله متى شئت.',
+      pk_credits: 'رصيد', pk_choose: 'اختر هذه الحزمة', most_popular: 'الأكثر طلباً',
+      pay_title: 'طريقة الدفع',
+      pay_text: 'ادفع عبر بريدي موب أو CCP، ثم ارفع صورة الوصل. نتحقق منه ونضيف رصيدك، عادة خلال بضع ساعات.',
+      faq_title: 'أسئلة شائعة',
+      faq1_q: 'هل يغيّر الذكاء الاصطناعي منتجي؟', faq1_a: 'لا. النموذج مُوجَّه للإبقاء على المنتج مطابقاً في الشكل واللون والملصق. تحقق من النتيجة قبل النشر.',
+      faq2_q: 'هل أحصل على صور مجانية؟', faq2_a: 'نعم. كل حساب جديد يحصل على 3 أرصدة مجانية لتجربة الخدمة.',
+      faq3_q: 'ماذا لو فشلت الصورة؟', faq3_a: 'لا يتم خصم أي رصيد. يُستعمل الرصيد فقط عندما تكون صورتك جاهزة.',
+      faq4_q: 'كم تستغرق الموافقة؟', faq4_a: 'نراجع كل وصل يدوياً. تظهر أرصدتك بعد الموافقة.',
+      final_title: 'أنشئ صورة منتجك القادمة اليوم.', final_btn: 'ابدأ بـ 3 صور مجانية',
+      tab_login: 'تسجيل الدخول', tab_signup: 'إنشاء حساب', f_name: 'الاسم الكامل', f_email: 'البريد الإلكتروني',
+      f_phone: 'الهاتف (اختياري)', f_password: 'كلمة المرور', f_password_hint: '8 أحرف على الأقل',
+      btn_login: 'دخول', btn_signup: 'إنشاء الحساب', login_title: 'مرحباً بك في Lamsa Studio',
+      err_network: 'خطأ في الشبكة. حاول مرة أخرى.',
+      dash_title: 'أنشئ صورة لمنتج', credits_left: 'متبقٍ {n} رصيد',
+      upload_title: '1. ارفع صورة منتجك', upload_drop: 'اسحب الصورة هنا أو انقر للاختيار',
+      upload_hint: 'JPG أو PNG أو WebP، حتى 8 ميغابايت', choose_style: '2. اختر النمط',
+      text_label: 'نص الإعلان (الاسم، السعر)', text_ph: 'مثال: حقيبة جلد - 3500 د.ج',
+      text_hint: 'اكتبه كما تريد أن يظهر تماماً. بالعربية أو الفرنسية أو الإنجليزية.',
+      generate: 'أنشئ الصورة', generating: 'جارٍ إنشاء صورتك...',
+      results_title: 'صورك', results_empty: 'ستظهر صورك هنا.',
+      download: 'تحميل', err_no_file: 'اختر صورة المنتج أولاً.',
+      not_enough: 'لم يعد لديك رصيد. اشترِ حزمة للمتابعة.',
+      file_type: 'استعمل صورة JPG أو PNG أو WebP.', file_big: 'يجب ألا تتجاوز الصورة 8 ميغابايت.',
+      preview_alt: 'صورة منتجك',
+      buy_title: 'شراء رصيد', buy_sub: 'اختر حزمة، ادفع عبر بريدي موب أو CCP، ثم ارفع الوصل.',
+      step_pack: '1. اختر الحزمة', step_method: '2. الدفع', method_bar: 'بريدي موب', method_ccp: 'CCP',
+      pay_bar_info: 'أرسل الدفع إلى هذا RIP لبريدي موب:', pay_ccp_info: 'أرسل الدفع إلى حساب CCP هذا:',
+      pay_amount: 'المبلغ المطلوب', pay_note: 'اكتب بريدك الإلكتروني في ملاحظة الدفع حتى نجد دفعتك.',
+      step_receipt: '3. ارفع الوصل', receipt_pick: 'اختر صورة الوصل',
+      receipt_hint: 'لقطة شاشة أو صورة، JPG أو PNG أو WebP، حتى 8 ميغابايت', submit_receipt: 'أرسل الوصل',
+      submitting: 'جارٍ الإرسال...', sent_ok: 'تم إرسال الوصل. سنضيف رصيدك بعد المراجعة.',
+      my_payments: 'مدفوعاتي', col_date: 'التاريخ', col_pack: 'الحزمة', col_amount: 'المبلغ',
+      col_status: 'الحالة', no_payments: 'لا توجد مدفوعات بعد.', view_receipt: 'عرض الوصل',
+      status_pending: 'قيد المراجعة', status_approved: 'مقبول', status_rejected: 'مرفوض',
+      err_pack: 'اختر حزمة رصيد.', err_method: 'اختر بريدي موب أو CCP.', err_receipt: 'اختر صورة الوصل.',
+      admin_title: 'الإدارة', stat_users: 'المستخدمون', stat_gens: 'الصور المنشأة', stat_revenue: 'الإيرادات المقبولة (دج)',
+      pending_title: 'المدفوعات المعلقة', col_user: 'العميل', col_method: 'الطريقة', col_receipt: 'الوصل',
+      col_actions: 'الإجراءات', approve: 'قبول', reject: 'رفض', no_pending: 'لا توجد مدفوعات معلقة.',
+      admin_only: 'هذه الصفحة للمسؤولين فقط.', confirm_approve: 'قبول هذه الدفعة وإضافة الرصيد؟',
+      confirm_reject: 'رفض هذه الدفعة؟', done: 'تم.'
+    }
+  };
+
+  let lang = 'en';
+  try { lang = localStorage.getItem('lamsa_lang') || 'en'; } catch (e) {}
+  if (!D[lang]) lang = 'en';
+
+  function t(key) {
+    return (D[lang] && D[lang][key]) || D.en[key] || key;
+  }
+
+  function apply() {
+    document.documentElement.lang = lang;
+    document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+    document.querySelectorAll('[data-i18n]').forEach((el) => { el.textContent = t(el.dataset.i18n); });
+    document.querySelectorAll('[data-i18n-ph]').forEach((el) => { el.placeholder = t(el.dataset.i18nPh); });
+    const sel = document.getElementById('langSel');
+    if (sel) sel.value = lang;
+    document.dispatchEvent(new CustomEvent('i18n:change', { detail: { lang } }));
+  }
+
+  function setLang(next) {
+    if (!D[next]) return;
+    lang = next;
+    try { localStorage.setItem('lamsa_lang', next); } catch (e) {}
+    apply();
+  }
+
+  window.i18n = {
+    t,
+    apply,
+    setLang,
+    get lang() { return lang; },
+  };
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const sel = document.getElementById('langSel');
+    if (sel) sel.addEventListener('change', (e) => setLang(e.target.value));
+    apply();
+  });
+})();

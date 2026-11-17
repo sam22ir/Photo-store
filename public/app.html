@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard - Lamsa Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Noto+Kufi+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="logo" href="app.html"><span class="logo-mark" aria-hidden="true"></span><span>Lamsa Studio</span></a>
+    <div class="nav-right">
+      <span id="credits" class="badge" aria-live="polite">-</span>
+      <a id="adminLink" class="btn btn-ghost btn-sm" href="admin.html" data-i18n="admin_link" hidden>Admin</a>
+      <a class="btn btn-ghost btn-sm" href="buy.html" data-i18n="buy_more">Buy credits</a>
+      <select id="langSel" class="lang" aria-label="Language">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="ar">العربية</option>
+      </select>
+      <a class="btn btn-ghost btn-sm" href="index.html" data-logout data-i18n="logout">Log out</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="page-top">
+    <h1 style="font-size:2rem;margin:0" data-i18n="dash_title">Make a product picture</h1>
+  </div>
+
+  <div class="app-grid">
+    <section class="card">
+      <h2 class="section-title" style="margin-top:0" data-i18n="upload_title">1. Upload your product photo</h2>
+      <label class="drop" id="drop" for="file">
+        <input type="file" id="file" accept="image/jpeg,image/png,image/webp" hidden>
+        <div id="dropEmpty">
+          <p data-i18n="upload_drop">Drop a photo here or click to choose</p>
+          <p class="hint" data-i18n="upload_hint">JPG, PNG or WebP, up to 8 MB</p>
+        </div>
+        <img id="preview" alt="" hidden>
+      </label>
+
+      <h2 class="section-title" data-i18n="choose_style">2. Choose a style</h2>
+      <div class="styles" id="styles">
+        <button type="button" class="style-opt" data-style="studio" aria-pressed="true">
+          <span data-i18n="st_studio">Studio</span><small data-i18n="st_studio_d">Clean white background with soft shadows.</small>
+        </button>
+        <button type="button" class="style-opt" data-style="luxury" aria-pressed="false">
+          <span data-i18n="st_luxury">Luxury</span><small data-i18n="st_luxury_d">Dark, elegant background with dramatic light.</small>
+        </button>
+        <button type="button" class="style-opt" data-style="outdoor" aria-pressed="false">
+          <span data-i18n="st_outdoor">Outdoor</span><small data-i18n="st_outdoor_d">Natural daylight, lifestyle scene.</small>
+        </button>
+        <button type="button" class="style-opt" data-style="ad" aria-pressed="false">
+          <span data-i18n="st_ad">Ad poster</span><small data-i18n="st_ad_d">Square Instagram ad with your text and price.</small>
+        </button>
+      </div>
+
+      <div class="field" id="textField" hidden>
+        <label for="adText" data-i18n="text_label">Text for the ad (name, price)</label>
+        <input id="adText" class="input" maxlength="300" data-i18n-ph="text_ph" placeholder="e.g. Leather bag - 3500 DA">
+        <span class="hint" data-i18n="text_hint">Write it exactly as it should appear. Arabic, French or English.</span>
+      </div>
+
+      <div id="alert" class="alert" role="alert" hidden></div>
+      <button id="genBtn" class="btn btn-primary btn-block" type="button" data-i18n="generate">Generate picture</button>
+    </section>
+
+    <section class="card">
+      <h2 class="section-title" style="margin-top:0" data-i18n="results_title">Your pictures</h2>
+      <p id="emptyRes" data-i18n="results_empty">Your pictures will appear here.</p>
+      <div id="gallery" class="gallery"></div>
+    </section>
+  </div>
+</main>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const t = (k) => window.i18n.t(k);
+  const alertEl = $('alert');
+  const STYLES = ['studio', 'luxury', 'outdoor', 'ad'];
+  const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  const MAX = 8 * 1024 * 1024;
+
+  let credits = 0;
+  let style = 'studio';
+  let file = null;
+  let items = [];
+
+  function renderCredits() {
+    $('credits').textContent = t('credits_left').replace('{n}', credits);
+  }
+
+  function renderGallery() {
+    const gallery = $('gallery');
+    $('emptyRes').hidden = items.length > 0;
+    gallery.innerHTML = items.map((g) => `
+      <article class="gen">
+        <img src="${esc(g.output_url)}" alt="">
+        <div class="gen-body">
+          <span>${esc(t('st_' + g.style))}</span>
+          <a class="btn btn-ghost btn-sm" href="${esc(g.output_url)}" download="lamsa-${esc(g.id)}.png">${esc(t('download'))}</a>
+        </div>
+      </article>`).join('');
+  }
+
+  async function loadGallery() {
+    try {
+      items = await api('/api/generations');
+    } catch (e) {
+      items = [];
+    }
+    renderGallery();
+  }
+
+  function setStyle(next) {
+    style = next;
+    document.querySelectorAll('.style-opt').forEach((b) => {
+      b.setAttribute('aria-pressed', String(b.dataset.style === next));
+    });
+    $('textField').hidden = next !== 'ad';
+  }
+
+  function pickFile(f) {
+    hideAlert(alertEl);
+    if (!f) return;
+    if (!TYPES.includes(f.type)) {
+      showAlert(alertEl, t('file_type'));
+      return;
+    }
+    if (f.size > MAX) {
+      showAlert(alertEl, t('file_big'));
+      return;
+    }
+    file = f;
+    const preview = $('preview');
+    preview.src = URL.createObjectURL(f);
+    preview.alt = t('preview_alt');
+    preview.hidden = false;
+    $('dropEmpty').hidden = true;
+  }
+
+  document.querySelectorAll('.style-opt').forEach((b) => {
+    b.addEventListener('click', () => setStyle(b.dataset.style));
+  });
+
+  $('file').addEventListener('change', (e) => pickFile(e.target.files[0]));
+
+  const drop = $('drop');
+  ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => {
+    e.preventDefault();
+    drop.classList.add('over');
+  }));
+  ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => {
+    e.preventDefault();
+    drop.classList.remove('over');
+  }));
+  drop.addEventListener('drop', (e) => pickFile(e.dataTransfer.files[0]));
+
+  $('genBtn').addEventListener('click', async () => {
+    hideAlert(alertEl);
+    if (!file) {
+      showAlert(alertEl, t('err_no_file'));
+      return;
+    }
+    if (credits < 1) {
+      showAlert(alertEl, t('not_enough'));
+      return;
+    }
+
+    const fd = new FormData();
+    fd.append('image', file);
+    fd.append('style', style);
+    fd.append('text', $('adText').value);
+
+    const btn = $('genBtn');
+    btn.disabled = true;
+    btn.textContent = t('generating');
+    try {
+      const result = await api('/api/generate', { method: 'POST', form: fd });
+      credits = result.credits;
+      renderCredits();
+      items.unshift({ id: result.id, style: result.style, output_url: result.output_url });
+      renderGallery();
+    } catch (err) {
+      showAlert(alertEl, err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = t('generate');
+    }
+  });
+
+  document.addEventListener('i18n:change', () => {
+    renderCredits();
+    renderGallery();
+  });
+
+  (async () => {
+    const user = await requireUser();
+    if (!user) return;
+    credits = user.credits;
+    renderCredits();
+    if (user.is_admin) $('adminLink').hidden = false;
+    setStyle(style);
+    await loadGallery();
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Log in - Lamsa Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Noto+Kufi+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"></span><span>Lamsa Studio</span></a>
+    <div class="nav-right">
+      <select id="langSel" class="lang" aria-label="Language">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="ar">العربية</option>
+      </select>
+      <a class="btn btn-ghost btn-sm" href="index.html" data-i18n="back_home">Back to home</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap" style="max-width:460px;padding-top:48px;padding-bottom:72px">
+  <h1 style="font-size:2rem" data-i18n="login_title">Welcome to Lamsa Studio</h1>
+  <div class="card">
+    <div class="tabs" role="tablist">
+      <button type="button" class="tab" role="tab" id="tabLogin" aria-selected="true" aria-controls="loginForm" data-i18n="tab_login">Log in</button>
+      <button type="button" class="tab" role="tab" id="tabSignup" aria-selected="false" aria-controls="signupForm" data-i18n="tab_signup">Sign up</button>
+    </div>
+
+    <div id="msg" class="alert" role="alert" hidden></div>
+
+    <form id="loginForm" role="tabpanel" aria-labelledby="tabLogin">
+      <div class="field">
+        <label for="loginEmail" data-i18n="f_email">Email</label>
+        <input id="loginEmail" name="email" type="email" class="input" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="loginPass" data-i18n="f_password">Password</label>
+        <input id="loginPass" name="password" type="password" class="input" autocomplete="current-password" required>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit" data-i18n="btn_login">Log in</button>
+    </form>
+
+    <form id="signupForm" role="tabpanel" aria-labelledby="tabSignup" hidden>
+      <div class="field">
+        <label for="signName" data-i18n="f_name">Full name</label>
+        <input id="signName" name="name" class="input" autocomplete="name" required>
+      </div>
+      <div class="field">
+        <label for="signEmail" data-i18n="f_email">Email</label>
+        <input id="signEmail" name="email" type="email" class="input" autocomplete="email" required>
+      </div>
+      <div class="field">
+        <label for="signPhone" data-i18n="f_phone">Phone (optional)</label>
+        <input id="signPhone" name="phone" type="tel" class="input" autocomplete="tel">
+      </div>
+      <div class="field">
+        <label for="signPass" data-i18n="f_password">Password</label>
+        <input id="signPass" name="password" type="password" class="input" minlength="8" autocomplete="new-password" required>
+        <span class="hint" data-i18n="f_password_hint">At least 8 characters</span>
+      </div>
+      <button class="btn btn-primary btn-block" type="submit" data-i18n="btn_signup">Create account</button>
+    </form>
+  </div>
+</main>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  const params = new URLSearchParams(location.search);
+  const msg = document.getElementById('msg');
+  const loginForm = document.getElementById('loginForm');
+  const signupForm = document.getElementById('signupForm');
+  const tabLogin = document.getElementById('tabLogin');
+  const tabSignup = document.getElementById('tabSignup');
+
+  function showTab(which) {
+    const signup = which === 'signup';
+    loginForm.hidden = signup;
+    signupForm.hidden = !signup;
+    tabLogin.setAttribute('aria-selected', String(!signup));
+    tabSignup.setAttribute('aria-selected', String(signup));
+    msg.hidden = true;
+  }
+
+  function nextPage() {
+    const next = params.get('next');
+    return next && /^[a-z-]+\.html$/.test(next) ? next : 'app.html';
+  }
+
+  function go(user) {
+    location.href = user.is_admin ? 'admin.html' : nextPage();
+  }
+
+  function showMsg(text) {
+    msg.textContent = text;
+    msg.className = 'alert';
+    msg.hidden = false;
+  }
+
+  tabLogin.addEventListener('click', () => showTab('login'));
+  tabSignup.addEventListener('click', () => showTab('signup'));
+  if (params.get('mode') === 'signup') showTab('signup');
+
+  loginForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(loginForm);
+    try {
+      const user = await api('/api/login', {
+        method: 'POST',
+        body: { email: fd.get('email'), password: fd.get('password') },
+      });
+      go(user);
+    } catch (err) {
+      showMsg(err.message || window.i18n.t('err_network'));
+    }
+  });
+
+  signupForm.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const fd = new FormData(signupForm);
+    try {
+      const user = await api('/api/signup', {
+        method: 'POST',
+        body: {
+          name: fd.get('name'),
+          email: fd.get('email'),
+          phone: fd.get('phone'),
+          password: fd.get('password'),
+        },
+      });
+      go(user);
+    } catch (err) {
+      showMsg(err.message || window.i18n.t('err_network'));
+    }
+  });
+</script>
+</body>
+</html>

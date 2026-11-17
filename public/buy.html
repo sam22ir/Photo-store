@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Buy credits - Lamsa Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Noto+Kufi+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="logo" href="app.html"><span class="logo-mark" aria-hidden="true"></span><span>Lamsa Studio</span></a>
+    <div class="nav-right">
+      <a class="btn btn-ghost btn-sm" href="app.html" data-i18n="nav_dash">Dashboard</a>
+      <select id="langSel" class="lang" aria-label="Language">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="ar">العربية</option>
+      </select>
+      <a class="btn btn-ghost btn-sm" href="index.html" data-logout data-i18n="logout">Log out</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="page-top">
+    <div>
+      <h1 style="font-size:2rem;margin:0" data-i18n="buy_title">Buy credits</h1>
+      <p style="margin:6px 0 0" data-i18n="buy_sub">Choose a pack, pay by BaridiMob or CCP, then upload the receipt.</p>
+    </div>
+  </div>
+
+  <div class="card" style="margin-bottom:28px;max-width:820px">
+    <h2 class="section-title" style="margin-top:0" data-i18n="step_pack">1. Choose a pack</h2>
+    <div class="option-grid" id="packs" role="radiogroup"></div>
+
+    <h2 class="section-title" data-i18n="step_method">2. Pay</h2>
+    <div class="option-grid" style="grid-template-columns:1fr 1fr" role="radiogroup">
+      <label class="option">
+        <input type="radio" name="method" value="baridimob" checked>
+        <strong data-i18n="method_bar">BaridiMob</strong>
+      </label>
+      <label class="option">
+        <input type="radio" name="method" value="ccp">
+        <strong data-i18n="method_ccp">CCP</strong>
+      </label>
+    </div>
+
+    <div class="pay-box">
+      <div id="payBar">
+        <p data-i18n="pay_bar_info">Send the payment to this BaridiMob RIP:</p>
+        <p class="mono"><strong>[YOUR BARIDIMOB RIP]</strong></p>
+      </div>
+      <div id="payCcp" hidden>
+        <p data-i18n="pay_ccp_info">Send the payment to this CCP account:</p>
+        <p class="mono"><strong>[YOUR CCP NUMBER + KEY + NAME]</strong></p>
+      </div>
+      <p style="margin-top:10px"><span data-i18n="pay_amount">Amount to send</span>: <strong id="amount">-</strong></p>
+      <p class="hint" style="margin:0" data-i18n="pay_note">Write your email in the payment note so we can find it.</p>
+    </div>
+
+    <h2 class="section-title" data-i18n="step_receipt">3. Upload the receipt</h2>
+    <label class="drop" for="receipt" style="min-height:160px">
+      <input type="file" id="receipt" accept="image/jpeg,image/png,image/webp" hidden>
+      <div id="receiptEmpty">
+        <p data-i18n="receipt_pick">Choose receipt image</p>
+        <p class="hint" data-i18n="receipt_hint">Screenshot or photo, JPG, PNG or WebP, up to 8 MB</p>
+      </div>
+      <img id="receiptPreview" alt="" hidden style="max-height:200px">
+    </label>
+
+    <div id="msg" class="alert" role="alert" hidden></div>
+    <button id="sendBtn" class="btn btn-primary btn-block" type="button" data-i18n="submit_receipt">Send receipt</button>
+  </div>
+
+  <section class="card" style="max-width:820px;margin-bottom:60px">
+    <h2 class="section-title" style="margin-top:0" data-i18n="my_payments">My payments</h2>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th data-i18n="col_date">Date</th>
+            <th data-i18n="col_pack">Pack</th>
+            <th data-i18n="col_amount">Amount</th>
+            <th data-i18n="col_status">Status</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="payRows"></tbody>
+      </table>
+    </div>
+    <p id="noPay" data-i18n="no_payments">No payments yet.</p>
+  </section>
+</main>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const t = (k) => window.i18n.t(k);
+  const msg = $('msg');
+  const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
+  let packs = [];
+  let selectedPack = 'shop';
+  let receiptFile = null;
+
+  function selectedMethod() {
+    return document.querySelector('input[name="method"]:checked').value;
+  }
+
+  function renderPacks() {
+    $('packs').innerHTML = packs.map((p) => `
+      <label class="option">
+        <input type="radio" name="pack" value="${esc(p.id)}" ${p.id === selectedPack ? 'checked' : ''}>
+        <strong>${esc(p.credits)} ${esc(t('pk_credits'))}</strong>
+        <span>${esc(p.dzd.toLocaleString('en-US'))} DZD</span>
+      </label>`).join('');
+    updateAmount();
+  }
+
+  function updateAmount() {
+    const checked = document.querySelector('input[name="pack"]:checked');
+    const pack = packs.find((p) => checked && p.id === checked.value);
+    $('amount').textContent = pack ? pack.dzd.toLocaleString('en-US') + ' DZD' : '-';
+  }
+
+  function updateMethod() {
+    const ccp = selectedMethod() === 'ccp';
+    $('payBar').hidden = ccp;
+    $('payCcp').hidden = !ccp;
+  }
+
+  function statusPill(s) {
+    return `<span class="pill ${esc(s)}">${esc(statusLabel(s))}</span>`;
+  }
+
+  async function loadPayments() {
+    const rows = await api('/api/payments');
+    $('noPay').hidden = rows.length > 0;
+    $('payRows').innerHTML = rows.map((r) => `
+      <tr>
+        <td>${esc(fmtDate(r.created_at))}</td>
+        <td>${esc(r.pack)} (${esc(r.credits)})</td>
+        <td>${esc(Number(r.amount_dzd).toLocaleString('en-US'))} DZD</td>
+        <td>${statusPill(r.status)}</td>
+        <td><a href="${esc(r.receipt_url)}" target="_blank" rel="noopener">${esc(t('view_receipt'))}</a></td>
+      </tr>`).join('');
+  }
+
+  document.getElementById('packs').addEventListener('change', (e) => {
+    if (e.target.name === 'pack') { selectedPack = e.target.value; updateAmount(); }
+  });
+  document.querySelectorAll('input[name="method"]').forEach((r) => r.addEventListener('change', updateMethod));
+
+  $('receipt').addEventListener('change', (e) => {
+    const f = e.target.files[0];
+    hideAlert(msg);
+    if (!f) return;
+    if (!TYPES.includes(f.type) || f.size > 8 * 1024 * 1024) {
+      receiptFile = null;
+      showAlert(msg, t('err_receipt'));
+      return;
+    }
+    receiptFile = f;
+    $('receiptPreview').src = URL.createObjectURL(f);
+    $('receiptPreview').hidden = false;
+    $('receiptEmpty').hidden = true;
+  });
+
+  $('sendBtn').addEventListener('click', async () => {
+    hideAlert(msg);
+    const checked = document.querySelector('input[name="pack"]:checked');
+    if (!checked) { showAlert(msg, t('err_pack')); return; }
+    if (!receiptFile) { showAlert(msg, t('err_receipt')); return; }
+
+    const fd = new FormData();
+    fd.append('pack', checked.value);
+    fd.append('method', selectedMethod());
+    fd.append('receipt', receiptFile);
+
+    const btn = $('sendBtn');
+    btn.disabled = true;
+    btn.textContent = t('submitting');
+    try {
+      await api('/api/payments', { method: 'POST', form: fd });
+      showAlert(msg, t('sent_ok'), true);
+      receiptFile = null;
+      $('receipt').value = '';
+      $('receiptPreview').hidden = true;
+      $('receiptEmpty').hidden = false;
+      await loadPayments();
+    } catch (err) {
+      showAlert(msg, err.message);
+    } finally {
+      btn.disabled = false;
+      btn.textContent = t('submit_receipt');
+    }
+  });
+
+  document.addEventListener('i18n:change', () => {
+    renderPacks();
+    loadPayments().catch(() => {});
+    updateMethod();
+  });
+
+  (async () => {
+    const user = await requireUser();
+    if (!user) return;
+    const params = new URLSearchParams(location.search);
+    if (params.get('pack')) selectedPack = params.get('pack');
+    updateMethod();
+    try {
+      packs = await api('/api/packs');
+      renderPacks();
+      await loadPayments();
+    } catch (err) {
+      showAlert(msg, err.message);
+    }
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin - Lamsa Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Noto+Kufi+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap nav">
+    <a class="logo" href="app.html"><span class="logo-mark" aria-hidden="true"></span><span>Lamsa Studio</span></a>
+    <div class="nav-right">
+      <a class="btn btn-ghost btn-sm" href="app.html" data-i18n="nav_dash">Dashboard</a>
+      <select id="langSel" class="lang" aria-label="Language">
+        <option value="en">English</option>
+        <option value="fr">Français</option>
+        <option value="ar">العربية</option>
+      </select>
+      <a class="btn btn-ghost btn-sm" href="index.html" data-logout data-i18n="logout">Log out</a>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="page-top">
+    <h1 style="font-size:2rem;margin:0" data-i18n="admin_title">Admin</h1>
+  </div>
+
+  <div id="denied" class="alert" role="alert" hidden data-i18n="admin_only">This page is for admins only.</div>
+
+  <div id="content" hidden>
+    <div class="stats">
+      <div class="card stat"><span class="hint" data-i18n="stat_users">Users</span><strong id="statUsers">-</strong></div>
+      <div class="card stat"><span class="hint" data-i18n="stat_gens">Pictures made</span><strong id="statGens">-</strong></div>
+      <div class="card stat"><span class="hint" data-i18n="stat_revenue">Approved revenue (DZD)</span><strong id="statRevenue">-</strong></div>
+    </div>
+
+    <h2 class="section-title" data-i18n="pending_title">Pending payments</h2>
+    <div id="msg" class="alert" role="alert" hidden></div>
+    <div class="table-wrap">
+      <table class="table">
+        <thead>
+          <tr>
+            <th data-i18n="col_user">Customer</th>
+            <th data-i18n="col_pack">Pack</th>
+            <th data-i18n="col_method">Method</th>
+            <th data-i18n="col_receipt">Receipt</th>
+            <th data-i18n="col_date">Date</th>
+            <th data-i18n="col_actions">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+    <p id="none" data-i18n="no_pending">No pending payments.</p>
+  </div>
+</main>
+
+<script src="assets/i18n.js"></script>
+<script src="assets/app.js"></script>
+<script>
+  const $ = (id) => document.getElementById(id);
+  const t = (k) => window.i18n.t(k);
+  const msg = $('msg');
+
+  async function loadStats() {
+    const s = await api('/api/admin/stats');
+    $('statUsers').textContent = Number(s.users).toLocaleString('en-US');
+    $('statGens').textContent = Number(s.generations).toLocaleString('en-US');
+    $('statRevenue').textContent = Number(s.revenue_dzd).toLocaleString('en-US');
+  }
+
+  async function loadPending() {
+    const rows = await api('/api/admin/payments?status=pending');
+    $('none').hidden = rows.length > 0;
+    $('rows').innerHTML = rows.map((r) => `
+      <tr>
+        <td>
+          <strong>${esc(r.name)}</strong><br>
+          <span class="hint">${esc(r.email)}${r.phone ? ' · ' + esc(r.phone) : ''}</span>
+        </td>
+        <td>${esc(r.pack)} (${esc(r.credits)})<br><span class="hint">${esc(Number(r.amount_dzd).toLocaleString('en-US'))} DZD</span></td>
+        <td>${esc(r.method)}</td>
+        <td><a href="${esc(r.receipt_url)}" target="_blank" rel="noopener"><img class="thumb" src="${esc(r.receipt_url)}" alt="${esc(t('col_receipt'))}"></a></td>
+        <td>${esc(fmtDate(r.created_at))}</td>
+        <td>
+          <div class="actions">
+            <button class="btn-approve" type="button" data-act="approve" data-id="${esc(r.id)}">${esc(t('approve'))}</button>
+            <button class="btn-reject" type="button" data-act="reject" data-id="${esc(r.id)}">${esc(t('reject'))}</button>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+
+  $('rows').addEventListener('click', async (e) => {
+    const btn = e.target.closest('button[data-act]');
+    if (!btn) return;
+    const approve = btn.dataset.act === 'approve';
+    const question = approve ? t('confirm_approve') : t('confirm_reject');
+    if (!confirm(question)) return;
+
+    hideAlert(msg);
+    btn.disabled = true;
+    try {
+      await api(`/api/admin/payments/${encodeURIComponent(btn.dataset.id)}/${btn.dataset.act}`, { method: 'POST' });
+      showAlert(msg, t('done'), true);
+      await Promise.all([loadPending(), loadStats()]);
+    } catch (err) {
+      showAlert(msg, err.message);
+      btn.disabled = false;
+    }
+  });
+
+  document.addEventListener('i18n:change', () => {
+    loadPending().catch(() => {});
+  });
+
+  (async () => {
+    const user = await requireUser();
+    if (!user) return;
+    if (!user.is_admin) {
+      $('denied').hidden = false;
+      return;
+    }
+    $('content').hidden = false;
+    try {
+      await Promise.all([loadStats(), loadPending()]);
+    } catch (err) {
+      showAlert(msg, err.message);
+    }
+  })();
+</script>
+</body>
+</html>
