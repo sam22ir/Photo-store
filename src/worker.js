@@ -21,7 +21,9 @@ const SIZES = {
 
 const IMAGE_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 const MAX_BYTES = 8 * 1024 * 1024;
-const SESSION_MS = 30 * 24 * 3600 * 1000;
+const SESSION_MS = 365 * 24 * 3600 * 1000; // stay signed in for a year
+const RENEW_AFTER_MS = 24 * 3600 * 1000; // push the expiry forward at most once a day
+const renewals = new WeakMap();
 const METHODS = ['baridimob', 'ccp'];
 const STATUSES = ['pending', 'approved', 'rejected'];
 const KEY_PATTERN = /^(inputs|outputs|receipts|logos)\/[A-Za-z0-9-]+(\.[a-z]+)?$/;
@@ -81,19 +83,34 @@ function getCookie(request, name) {
   return null;
 }
 
+function withRenewedCookie(request, response) {
+  const token = renewals.get(request);
+  if (!token || response.headers.has('Set-Cookie')) return response;
+  const out = new Response(response.body, response);
+  out.headers.append('Set-Cookie', sessionCookie(token, SESSION_MS / 1000));
+  return out;
+}
+
 const sessionCookie = (token, maxAgeSeconds) =>
   `sid=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${maxAgeSeconds}`;
 
 async function currentUser(request, env) {
   const token = getCookie(request, 'sid');
   if (!token) return null;
-  return env.DB.prepare(
-    `SELECT u.id, u.email, u.name, u.credits, u.is_admin
+  const now = Date.now();
+  const user = await env.DB.prepare(
+    `SELECT u.id, u.email, u.name, u.credits, u.is_admin, s.expires_at
        FROM sessions s JOIN users u ON u.id = s.user_id
       WHERE s.token = ? AND s.expires_at > ?`
   )
-    .bind(token, Date.now())
+    .bind(token, now)
     .first();
+  // Sliding sign-in: while the customer keeps coming back, they never get logged out.
+  if (user && user.expires_at < now + SESSION_MS - RENEW_AFTER_MS) {
+    await env.DB.prepare('UPDATE sessions SET expires_at = ? WHERE token = ?').bind(now + SESSION_MS, token).run();
+    renewals.set(request, token);
+  }
+  return user;
 }
 
 async function requireUser(request, env) {
@@ -850,7 +867,7 @@ export default {
         if (request.method !== 'GET') fail(405, 'Method not allowed.');
         const key = decodeURIComponent(pathname.slice('/files/'.length));
         if (!KEY_PATTERN.test(key)) fail(404, 'Not found.');
-        return await serveFile(request, env, key);
+        return withRenewedCookie(request, await serveFile(request, env, key));
       }
 
       if (!pathname.startsWith('/api/')) fail(404, 'Not found.');
@@ -862,7 +879,8 @@ export default {
       if (!route) fail(405, 'Method not allowed.');
 
       const match = pathname.match(route.path);
-      return await route.handler(request, env, url, match);
+      const response = await route.handler(request, env, url, match);
+      return withRenewedCookie(request, response);
     } catch (err) {
       if (err instanceof HttpError) return json({ error: err.message }, err.status);
       console.error(err);

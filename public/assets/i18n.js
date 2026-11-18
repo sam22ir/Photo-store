@@ -3,7 +3,7 @@
   const D = {
     en: {
       nav_how: 'How it works', nav_styles: 'Styles', nav_pricing: 'Pricing', nav_faq: 'FAQ',
-      login: 'Log in', logout: 'Log out', nav_dash: 'Dashboard', admin_link: 'Admin',
+      login: 'Log in', my_studio: 'My studio', logout: 'Log out', nav_dash: 'Dashboard', admin_link: 'Admin',
       buy_more: 'Buy credits', back_home: 'Back to home',
       footer_text: '© 2026 Lamsa Studio · Tebessa, Algeria',
       hero_title: 'Turn a phone photo into a picture that sells.',
@@ -128,7 +128,7 @@
       final_title: 'Créez votre prochaine image produit aujourd’hui.', final_btn: 'Commencer avec 3 images gratuites',
       tab_login: 'Connexion', tab_signup: 'Inscription', f_name: 'Nom complet', f_email: 'E-mail',
       f_phone: 'Téléphone (facultatif)', f_password: 'Mot de passe', f_password_hint: 'Au moins 8 caractères',
-      btn_login: 'Se connecter', btn_signup: 'Créer le compte', login_title: 'Bienvenue sur Lamsa Studio',
+      btn_login: 'Se connecter', my_studio: 'Mon studio', btn_signup: 'Créer le compte', login_title: 'Bienvenue sur Lamsa Studio',
       err_network: 'Erreur réseau. Réessayez.',
       dash_title: 'Créer une image produit', credits_left: '{n} crédits restants',
       upload_title: '1. Envoyez la photo de votre produit', upload_drop: 'Déposez une photo ici ou cliquez pour choisir',
@@ -195,7 +195,7 @@
     },
     ar: {
       nav_how: 'كيف يعمل', nav_styles: 'الأنماط', nav_pricing: 'الأسعار', nav_faq: 'الأسئلة',
-      login: 'تسجيل الدخول', logout: 'تسجيل الخروج', nav_dash: 'لوحة التحكم', admin_link: 'الإدارة',
+      login: 'تسجيل الدخول', logout: 'تسجيل الخروج', my_studio: 'استوديو الخاص بي', nav_dash: 'لوحة التحكم', admin_link: 'الإدارة',
       buy_more: 'شراء رصيد', back_home: 'العودة إلى الرئيسية',
       footer_text: '© 2026 Lamsa Studio · تبسة، الجزائر',
       hero_title: 'حوّل صورة الهاتف إلى صورة تبيع.',

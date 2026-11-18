@@ -94,9 +94,12 @@
     return next && /^[a-z-]+\.html$/.test(next) ? next : 'app.html';
   }
 
-  function go(user) {
-    location.href = user.is_admin ? 'admin.html' : nextPage();
+  function go() {
+    location.replace(nextPage());
   }
+
+  // Already signed in? Go straight to the studio.
+  api('/api/me').then(go).catch(() => {});
 
   function showMsg(text) {
     msg.textContent = text;

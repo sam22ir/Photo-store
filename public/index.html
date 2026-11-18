@@ -27,7 +27,7 @@
         <option value="fr">Français</option>
         <option value="ar">العربية</option>
       </select>
-      <a class="btn btn-ghost btn-sm" href="login.html" data-i18n="login">Log in</a>
+      <a class="btn btn-ghost btn-sm" href="login.html" data-i18n="login" id="navAuth">Log in</a>
     </div>
   </div>
 </header>
@@ -194,5 +194,18 @@
 </footer>
 
 <script src="assets/i18n.js"></script>
+<script>
+  // Signed-in visitors go straight to their studio from every button.
+  fetch('/api/me', { credentials: 'same-origin' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((user) => {
+      if (!user) return;
+      document.querySelectorAll('a[href^="login.html"]').forEach((a) => { a.href = 'app.html'; });
+      const nav = document.getElementById('navAuth');
+      nav.dataset.i18n = 'my_studio';
+      nav.textContent = window.i18n.t('my_studio');
+    })
+    .catch(() => {});
+</script>
 </body>
 </html>
