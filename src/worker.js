@@ -202,11 +202,21 @@ async function me(request, env) {
 
 // ---------- Generation ----------
 
-function buildPrompt(style, text) {
-  let prompt =
+const PROMPT_MODES = ['template', 'custom'];
+
+function buildPrompt(style, text, userPrompt) {
+  const base =
     'Turn this phone photo into a professional product photo. Keep the product itself identical: ' +
-    'same shape, colors, labels and details. ' +
-    `Style: ${STYLES[style]}.`;
+    'same shape, colors, labels and details. ';
+  if (PROMPT_MODES.includes(style)) {
+    return (
+      base +
+      'Create the scene the customer describes below. If it asks for text on the image, write that text ' +
+      'exactly as given, with the same characters and numbers. Customer description: ' +
+      userPrompt
+    );
+  }
+  let prompt = base + `Style: ${STYLES[style]}.`;
   if (text) {
     prompt += ` Write this text on the image exactly as given, with the same characters and numbers: "${text}".`;
   }
@@ -222,17 +232,21 @@ async function generate(request, env) {
   const style = String(form.get('style') || '');
   const text = style === 'ad' ? String(form.get('text') || '').trim().slice(0, 300) : '';
   const sizeName = String(form.get('size') || 'square');
+  const userPrompt = PROMPT_MODES.includes(style) ? String(form.get('prompt') || '').trim().slice(0, 1000) : '';
 
   if (!(file instanceof File)) fail(400, 'Please upload a product photo.');
   if (!IMAGE_TYPES.includes(file.type)) fail(400, 'Use a JPG, PNG or WebP image.');
   if (file.size > MAX_BYTES) fail(413, 'The image must be 8 MB or smaller.');
-  if (!Object.prototype.hasOwnProperty.call(STYLES, style)) fail(400, 'Please choose a valid style.');
+  if (!Object.prototype.hasOwnProperty.call(STYLES, style) && !PROMPT_MODES.includes(style)) {
+    fail(400, 'Please choose a valid style.');
+  }
+  if (PROMPT_MODES.includes(style) && userPrompt.length < 5) fail(400, 'Please describe the picture you want.');
   if (!Object.prototype.hasOwnProperty.call(SIZES, sizeName)) fail(400, 'Please choose a valid size.');
 
   const id = crypto.randomUUID();
   const inputKey = `inputs/${id}`;
   const outputKey = `outputs/${id}.png`;
-  const prompt = buildPrompt(style, text);
+  const prompt = buildPrompt(style, text, userPrompt);
 
   await env.BUCKET.put(inputKey, await file.arrayBuffer(), {
     httpMetadata: { contentType: file.type },
