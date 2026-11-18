@@ -64,23 +64,11 @@
       <p class="hint upload-hint" data-i18n="up_multi_hint">You can choose several photos. Each one gets its own picture with the same settings.</p>
     </div>
 
-    <h2 class="section-title step-h"><span class="step-check" id="check2" aria-hidden="true"></span><span data-i18n="choose_mode">2. How do you want it?</span></h2>
-    <div class="mode-tabs" role="group" aria-label="Mode">
-      <button type="button" class="mode-opt" data-mode="styles" aria-pressed="true" data-i18n="mode_styles">Quick styles</button>
-      <button type="button" class="mode-opt" data-mode="templates" aria-pressed="false" data-i18n="mode_templates">Prompt templates</button>
-      <button type="button" class="mode-opt" data-mode="custom" aria-pressed="false" data-i18n="mode_custom">Write your own</button>
-    </div>
-
-    <div id="panelTemplates" hidden>
-      <p class="hint" data-i18n="tpl_hint">Pick a ready-made idea. You can change the words before you generate.</p>
-      <div class="templates" id="templates"></div>
-    </div>
-
-    <div class="field" id="promptField" hidden>
-      <label for="promptText" data-i18n="prompt_label">Describe the picture you want</label>
-      <textarea id="promptText" class="input prompt-box" rows="5" maxlength="1000" data-i18n-ph="prompt_ph" placeholder="e.g. My perfume on a beach at sunset"></textarea>
+    <h2 class="section-title step-h"><span class="step-check" id="check2" aria-hidden="true"></span><label for="promptText" data-i18n="describe_title">2. Describe the picture you want</label></h2>
+    <div class="field prompt-main">
+      <textarea id="promptText" class="input prompt-box" rows="4" maxlength="1000" data-i18n-ph="prompt_ph2" placeholder="e.g. My perfume on a beach at sunset, with sand and small shells around it"></textarea>
       <div class="prompt-meta">
-        <span class="hint" data-i18n="prompt_hint">Write in Arabic, French or English. Replace anything in [brackets]. Your product always stays the same.</span>
+        <span class="hint" data-i18n="prompt_hint2">Any language is fine. Leave it empty for a clean studio photo. Your product always stays the same.</span>
         <span class="hint" id="promptCount">0 / 1000</span>
       </div>
       <div class="row-btns">
@@ -92,25 +80,9 @@
       </div>
     </div>
 
-    <div class="styles" id="styles">
-      <button type="button" class="style-opt" data-style="studio" aria-pressed="true">
-        <span class="art art-studio" aria-hidden="true"><i></i></span><span class="style-name" data-i18n="st_studio">Studio</span>
-      </button>
-      <button type="button" class="style-opt" data-style="luxury" aria-pressed="false">
-        <span class="art art-luxury" aria-hidden="true"><i></i></span><span class="style-name" data-i18n="st_luxury">Luxury</span>
-      </button>
-      <button type="button" class="style-opt" data-style="outdoor" aria-pressed="false">
-        <span class="art art-outdoor" aria-hidden="true"><i></i></span><span class="style-name" data-i18n="st_outdoor">Outdoor</span>
-      </button>
-      <button type="button" class="style-opt" data-style="ad" aria-pressed="false">
-        <span class="art art-ad" aria-hidden="true"><i></i><b>-30%</b></span><span class="style-name" data-i18n="st_ad">Ad poster</span>
-      </button>
-    </div>
-
-    <div class="field" id="textField" hidden>
-      <label for="adText" data-i18n="text_label">Text for the ad (name, price)</label>
-      <input id="adText" class="input" maxlength="300" data-i18n-ph="text_ph" placeholder="e.g. Leather bag - 3500 DA">
-      <span class="hint" data-i18n="text_hint">Write it exactly as it should appear. Arabic, French or English.</span>
+    <div class="ideas">
+      <span class="field-label" id="ideasLabel" data-i18n="ideas_title">Need an idea? Tap one</span>
+      <div class="idea-row" id="templates" role="group" aria-labelledby="ideasLabel"></div>
     </div>
 
     <h2 class="section-title step-h"><span class="step-check done" id="check3" aria-hidden="true"></span><span data-i18n="size_title">3. Choose a size</span></h2>
@@ -258,6 +230,7 @@
   const MAX = 8 * 1024 * 1024;
   const MAX_FILES = 10;
   const TPL_ART = {
+    studio: ['#F4F4F2', '#2E6B57'], luxury: ['#17181C', '#D9B566'], outdoor: ['#7FAE6A', '#FFFFFF'], ad: ['#F2B544', '#FFFFFF'],
     marble: ['#ECEAE6', '#FFFFFF'], hand: ['#C9A98A', '#FFF7EE'], flatlay: ['#F6D9E3', '#FFFFFF'],
     nature: ['#5E8C5A', '#F2F7EF'], food: ['#8A5A3B', '#F7E9D7'], ramadan: ['#2B2350', '#E8B94A'],
     eid: ['#0F5C46', '#E2C46B'], sale: ['#E63946', '#FFFFFF'], tech: ['#101828', '#4FA3FF'], model: ['#D7C2B0', '#3D434B'],
@@ -265,10 +238,10 @@
 
   let credits = 0;
   let freeLeft = 0;
-  let style = 'studio';
+
   let size = 'square';
-  let mode = 'styles';
   let templateId = '';
+  let templateText = '';
   let count = 1;
   let files = [];
   let items = [];
@@ -287,8 +260,6 @@
   }
 
   function promptReady() {
-    if (mode === 'styles') return true;
-    if (mode === 'templates' && !templateId) return false;
     return $('promptText').value.trim().length >= 5;
   }
 
@@ -455,31 +426,10 @@
   }
 
   // ---------- Modes, styles, templates, sizes, versions ----------
-  function setStyle(next) {
-    style = next;
-    document.querySelectorAll('.style-opt').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.style === next)));
-    $('textField').hidden = !(mode === 'styles' && next === 'ad');
-    updateSteps();
-  }
-
-  function setMode(next) {
-    mode = next;
-    document.querySelectorAll('.mode-opt').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === next)));
-    $('styles').hidden = next !== 'styles';
-    $('panelTemplates').hidden = next !== 'templates';
-    $('promptField').hidden = next === 'styles' || (next === 'templates' && !templateId);
-    if (next === 'custom' && templateId) {
-      templateId = '';
-      $('promptText').value = '';
-      updateCount();
-      renderTemplates();
-    }
-    setStyle(style);
-  }
-
   function updateCount() {
     $('promptCount').textContent = $('promptText').value.length + ' / 1000';
     updateSteps();
+    if (templateId && $('promptText').value.trim() === '') { templateId = ''; templateText = ''; renderTemplates(); }
   }
 
   function renderTemplates() {
@@ -487,7 +437,7 @@
     $('templates').replaceChildren(...(window.LAMSA_TEMPLATES || []).map((tp) => {
       const b = document.createElement('button');
       b.type = 'button';
-      b.className = 'tpl-opt';
+      b.className = 'idea';
       b.setAttribute('aria-pressed', String(tp.id === templateId));
       const art = document.createElement('span');
       art.className = 'tpl-art';
@@ -495,12 +445,9 @@
       const colors = TPL_ART[tp.id] || ['#E7E9EC', '#FFFFFF'];
       art.style.background = colors[0];
       art.innerHTML = `<i style="background:${colors[1]}"></i>`;
-      b.append(art);
       const name = document.createElement('span');
       name.textContent = tp.name[lang] || tp.name.en;
-      const preview = document.createElement('small');
-      preview.textContent = tp.prompt[lang] || tp.prompt.en;
-      b.append(name, preview);
+      b.append(art, name);
       b.addEventListener('click', () => pickTemplate(tp));
       return b;
     }));
@@ -509,11 +456,14 @@
   function pickTemplate(tp) {
     const lang = window.i18n.lang;
     templateId = tp.id;
-    $('promptText').value = tp.prompt[lang] || tp.prompt.en;
+    templateText = tp.prompt[lang] || tp.prompt.en;
+    $('promptText').value = templateText;
     updateCount();
     renderTemplates();
-    $('promptField').hidden = false;
-    $('promptText').focus();
+    const box = $('promptText');
+    box.focus();
+    const bracket = templateText.indexOf('[');
+    if (bracket >= 0) box.setSelectionRange(bracket, templateText.indexOf(']', bracket) + 1);
   }
 
   function setSize(next) {
@@ -590,27 +540,24 @@
   // ---------- Saved settings ----------
   function currentSettings() {
     return {
-      mode, style, size, count, templateId,
-      prompt: mode === 'styles' ? '' : $('promptText').value,
-      text: $('adText').value,
+      size, count, templateId,
+      prompt: $('promptText').value,
       cutout: $('cutout').checked,
       brand: $('useBrand').checked,
     };
   }
 
-  function applySettings(s) {
-    templateId = s.templateId || '';
-    $('promptText').value = s.prompt || '';
-    $('adText').value = s.text || '';
-    $('cutout').checked = s.cutout !== false;
-    $('useBrand').checked = !!s.brand && !$('useBrand').disabled;
+  function applySettings(st) {
+    templateId = st.templateId || '';
+    templateText = '';
+    $('promptText').value = st.prompt || '';
+    $('cutout').checked = st.cutout !== false;
+    $('useBrand').checked = !!st.brand && !$('useBrand').disabled;
     updateCount();
     renderTemplates();
-    setSize(SIZES[s.size] ? s.size : 'square');
-    setCount(Math.min(4, Math.max(1, Number(s.count) || 1)));
-    style = s.style && document.querySelector(`.style-opt[data-style="${s.style}"]`) ? s.style : 'studio';
-    setMode(['styles', 'templates', 'custom'].includes(s.mode) ? s.mode : 'styles');
-    if (s.mode !== 'styles' && (s.prompt || '').length) $('promptField').hidden = false;
+    setSize(SIZES[st.size] ? st.size : 'square');
+    setCount(Math.min(4, Math.max(1, Number(st.count) || 1)));
+    updateMoreSum();
   }
 
   function renderPresets() {
@@ -877,8 +824,7 @@
     hideAlert(alertEl);
     if (!files.length) { showAlert(alertEl, t('err_no_file')); return; }
     const promptValue = $('promptText').value.trim();
-    if (mode === 'templates' && !templateId) { showAlert(alertEl, t('err_no_template')); return; }
-    if (mode !== 'styles' && promptValue.length < 5) { showAlert(alertEl, t('err_no_prompt')); return; }
+    if (promptValue.length > 0 && promptValue.length < 5) { showAlert(alertEl, t('err_short_prompt')); $('promptText').focus(); return; }
     if (credits < count * files.length) { showAlert(alertEl, t('not_enough')); return; }
 
     const btn = $('genBtn');
@@ -895,11 +841,10 @@
       fd.append('count', String(count));
       fd.append('cutout', useCutout ? '1' : '0');
       fd.append('brand', $('useBrand').checked ? '1' : '0');
-      if (mode === 'styles') {
-        fd.append('style', style);
-        fd.append('text', $('adText').value);
+      if (!promptValue) {
+        fd.append('style', 'studio');
       } else {
-        fd.append('style', mode === 'templates' ? 'template' : 'custom');
+        fd.append('style', templateId && promptValue === templateText.trim() ? 'template' : 'custom');
         fd.append('prompt', promptValue);
       }
       startProgress(useCutout, i, total);
@@ -926,9 +871,7 @@
   }
 
   // ---------- Events ----------
-  document.querySelectorAll('.style-opt').forEach((b) => b.addEventListener('click', () => setStyle(b.dataset.style)));
   document.querySelectorAll('.size-opt').forEach((b) => b.addEventListener('click', () => setSize(b.dataset.size)));
-  document.querySelectorAll('.mode-opt').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
   document.querySelectorAll('.seg-opt').forEach((b) => b.addEventListener('click', () => setCount(Number(b.dataset.count))));
   $('promptText').addEventListener('input', updateCount);
   $('improveBtn').addEventListener('click', improve);
@@ -1004,7 +947,6 @@
     freeLeft = user.free_retries_left || 0;
     if (user.is_admin) $('adminLink').hidden = false;
     renderTemplates();
-    setMode(mode);
     setSize(size);
     setCount(count);
     renderCredits();

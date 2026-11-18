@@ -2,6 +2,42 @@
 // Text inside [BRACKETS] is for the customer to replace with their own words.
 window.LAMSA_TEMPLATES = [
   {
+    id: 'studio', quick: true,
+    name: { en: 'Studio', fr: 'Studio', ar: 'استوديو' },
+    prompt: {
+      en: 'Clean white studio background with soft natural shadows, bright even light, sharp professional product photo.',
+      fr: 'Fond de studio blanc et propre avec des ombres douces, lumière claire et uniforme, photo produit professionnelle et nette.',
+      ar: 'خلفية استوديو بيضاء نظيفة مع ظلال ناعمة، إضاءة ساطعة ومتساوية، صورة منتج احترافية وواضحة.',
+    },
+  },
+  {
+    id: 'luxury', quick: true,
+    name: { en: 'Luxury', fr: 'Luxe', ar: 'فاخر' },
+    prompt: {
+      en: 'Dark elegant background with dramatic soft spotlight and gentle reflections, premium luxury feel.',
+      fr: 'Fond sombre et élégant avec un éclairage dramatique doux et de légers reflets, ambiance luxe haut de gamme.',
+      ar: 'خلفية داكنة أنيقة مع إضاءة درامية ناعمة وانعكاسات خفيفة، إحساس فاخر وراقٍ.',
+    },
+  },
+  {
+    id: 'outdoor', quick: true,
+    name: { en: 'Outdoor', fr: 'Extérieur', ar: 'خارجي' },
+    prompt: {
+      en: 'Natural outdoor lifestyle scene in warm daylight, softly blurred background, real and inviting.',
+      fr: 'Scène extérieure naturelle à la lumière du jour, arrière-plan légèrement flou, réaliste et accueillante.',
+      ar: 'مشهد خارجي طبيعي في ضوء النهار الدافئ، خلفية ضبابية خفيفة، واقعي وجذاب.',
+    },
+  },
+  {
+    id: 'ad', quick: true,
+    name: { en: 'Ad poster', fr: 'Affiche pub', ar: 'ملصق إعلاني' },
+    prompt: {
+      en: 'Instagram ad poster with a bold modern layout and bright colors. Add the text "[PRODUCT NAME - PRICE DA]".',
+      fr: 'Affiche publicitaire Instagram avec une mise en page moderne et des couleurs vives. Ajoutez le texte « [NOM DU PRODUIT - PRIX DA] ».',
+      ar: 'ملصق إعلاني لإنستغرام بتصميم عصري جريء وألوان زاهية. أضف النص "[اسم المنتج - السعر دج]".',
+    },
+  },
+  {
     id: 'marble',
     name: { en: 'White marble', fr: 'Marbre blanc', ar: 'رخام أبيض' },
     prompt: {

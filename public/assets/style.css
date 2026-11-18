@@ -504,3 +504,26 @@ input[type="color"] { width: 52px; height: 44px; border: 1px solid var(--border)
 .tpl-opt small { display: -webkit-box; -webkit-line-clamp: 2; }
 .tpl-opt[aria-pressed="true"] small { -webkit-line-clamp: unset; }
 .more > summary { align-items: flex-start; text-align: start; }
+
+/* ---------- Describe-first step ---------- */
+.step-h label { cursor: pointer; }
+.prompt-main { margin-bottom: 8px; }
+.prompt-main .prompt-box { min-height: 110px; font-size: 1rem; }
+.ideas { margin: 4px 0 8px; display: flex; flex-direction: column; gap: 8px; }
+.idea-row {
+  display: flex; gap: 8px; overflow-x: auto; padding: 2px 2px 8px; scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch; scrollbar-width: thin;
+}
+.idea {
+  flex: none; scroll-snap-align: start; display: inline-flex; align-items: center; gap: 8px;
+  min-height: 48px; padding: 6px 14px 6px 6px; border: 1px solid var(--border); border-radius: 999px;
+  background: #fff; color: var(--text); font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer; white-space: nowrap;
+}
+[dir="rtl"] .idea { padding: 6px 6px 6px 14px; }
+.idea .tpl-art { width: 36px; height: 36px; border-radius: 999px; grid-row: auto; }
+.idea[aria-pressed="true"] { border-color: var(--accent); background: var(--tint); }
+.idea:hover { border-color: var(--accent); }
+.menu { border: 0; padding: 0; }
+#promptCount { white-space: nowrap; }
+.more { padding: 0; }
+.more .brand-card { border-bottom: 1px solid var(--border); }
