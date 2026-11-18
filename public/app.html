@@ -38,7 +38,7 @@
     <div class="col">
       <section class="card">
         <h2 class="section-title" style="margin-top:0" data-i18n="upload_title">1. Upload your product photo</h2>
-        <label class="drop" id="drop" for="file">
+        <label class="drop" id="drop" for="file" tabindex="0">
           <input type="file" id="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
           <span id="dropEmpty">
             <span class="drop-line" data-i18n="upload_drop">Drop a photo here or click to choose</span>
@@ -136,6 +136,7 @@
           <span><strong data-i18n="brand_use">Add my brand (logo and colors)</strong>
           <small class="hint" id="brandHint" data-i18n="brand_none">Set up your brand kit below first.</small></span>
         </label>
+        <button type="button" class="link-btn" id="openBrand" data-i18n="brand_open">Set up my brand</button>
 
         <div class="presets-box">
           <span class="field-label" data-i18n="presets_title">My saved settings</span>
@@ -165,30 +166,53 @@
       </section>
 
       <details class="card brand-card" id="brandCard">
-        <summary><h2 class="section-title" style="margin:0;display:inline" data-i18n="brand_title">My brand kit</h2></summary>
+        <summary>
+          <span class="brand-sum">
+            <span class="section-title" style="margin:0" data-i18n="brand_title">My brand kit</span>
+            <span class="badge" id="brandStatus"></span>
+          </span>
+        </summary>
         <div class="brand-body">
-          <div class="field">
-            <label for="shopName" data-i18n="brand_shop">Shop name</label>
-            <input id="shopName" class="input" maxlength="60">
-          </div>
-          <div class="field">
-            <span class="field-label" data-i18n="brand_colors">Brand colors</span>
-            <div class="row-btns">
-              <input type="color" id="color1" value="#0B6B52" aria-label="Color 1">
-              <input type="color" id="color2" value="#F2B544" aria-label="Color 2">
-              <label class="check inline"><input type="checkbox" id="useColors"> <span data-i18n="brand_use_colors">Use these colors</span></label>
+          <p class="hint" data-i18n="brand_intro">Set it up once. Then tick "Add my brand" and your logo and colors go on your pictures.</p>
+
+          <div class="brand-grid">
+            <div class="brand-form">
+              <span class="field-label" data-i18n="brand_step_logo">1. Your logo</span>
+              <label class="logo-drop" id="logoDrop" for="logoFile" tabindex="0">
+                <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" hidden>
+                <img id="logoPreview" alt="" hidden>
+                <span id="logoEmpty" class="logo-empty">
+                  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  <span data-i18n="brand_logo_tap">Tap to add your logo</span>
+                  <small class="hint" data-i18n="brand_logo_tip">PNG with a transparent background works best</small>
+                </span>
+              </label>
+              <button type="button" class="btn btn-ghost btn-sm" id="removeLogo" data-i18n="brand_remove_logo" hidden>Remove logo</button>
+
+              <label class="field-label" for="shopName" data-i18n="brand_step_name">2. Shop name</label>
+              <input id="shopName" class="input" maxlength="60" data-i18n-ph="brand_shop_ph" placeholder="e.g. Nafaa Store">
+
+              <span class="field-label" id="pairsLabel" data-i18n="brand_step_colors">3. Brand colors</span>
+              <div class="pairs" id="pairs" role="group" aria-labelledby="pairsLabel"></div>
+              <div class="row-btns custom-colors">
+                <span class="hint" data-i18n="brand_custom">Or choose your own:</span>
+                <input type="color" id="color1" value="#0B6B52" aria-label="Main color">
+                <input type="color" id="color2" value="#F2B544" aria-label="Second color">
+              </div>
+            </div>
+
+            <div class="brand-preview-wrap">
+              <span class="field-label" data-i18n="brand_preview">Preview</span>
+              <div class="brand-preview" id="brandPreview" aria-hidden="true">
+                <div class="bp-product"></div>
+                <img id="bpLogo" class="bp-logo" alt="" hidden>
+                <div class="bp-bar" id="bpBar"><span id="bpName">Lamsa</span></div>
+              </div>
             </div>
           </div>
-          <div class="field">
-            <label for="logoFile" data-i18n="brand_logo">Logo (a PNG with a transparent background works best)</label>
-            <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" class="input">
-            <div class="logo-row" id="logoRow" hidden>
-              <img id="logoPreview" alt="">
-              <button type="button" class="btn btn-ghost btn-sm" id="removeLogo" data-i18n="brand_remove_logo">Remove logo</button>
-            </div>
-          </div>
+
           <div id="brandAlert" class="alert" role="alert" hidden></div>
-          <button type="button" class="btn btn-primary btn-sm" id="saveBrand" data-i18n="brand_save">Save brand kit</button>
+          <button type="button" class="btn btn-primary btn-block" id="saveBrand" data-i18n="brand_save">Save my brand</button>
         </div>
       </details>
     </div>
@@ -577,38 +601,182 @@
   }
 
   // ---------- Brand kit ----------
+  const PAIRS = [
+    ['#0B6B52', '#F2B544'], ['#15171A', '#C9A227'], ['#1F4E9E', '#F2F2F2'],
+    ['#B3263E', '#F6E7D8'], ['#6C3FB5', '#F7C6D9'], ['#2E2E2E', '#FF6B35'],
+  ];
+  let logoColors = null;      // pair suggested from the logo
+  let pendingLogo = null;     // logo picked but not saved yet
+  let pendingLogoUrl = null;
+  let removeLogoNext = false;
+  let colorsOn = true;
+
+  function brandColors() {
+    return colorsOn ? [$('color1').value.toUpperCase(), $('color2').value.toUpperCase()] : [];
+  }
+
+  function renderPairs() {
+    const current = brandColors().join(',');
+    const opts = [];
+    if (logoColors) opts.push({ pair: logoColors, label: t('brand_from_logo') });
+    PAIRS.forEach((p) => opts.push({ pair: p }));
+    const buttons = opts.map((o) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pair' + (o.label ? ' pair-logo' : '');
+      b.setAttribute('aria-pressed', String(colorsOn && o.pair.join(',') === current));
+      b.setAttribute('aria-label', (o.label ? o.label + ': ' : '') + o.pair.join(' + '));
+      b.innerHTML = `<span style="background:${o.pair[0]}"></span><span style="background:${o.pair[1]}"></span>`;
+      if (o.label) {
+        const l = document.createElement('small');
+        l.textContent = o.label;
+        b.append(l);
+      }
+      b.addEventListener('click', () => {
+        colorsOn = true;
+        $('color1').value = o.pair[0];
+        $('color2').value = o.pair[1];
+        renderPairs();
+        renderBrandPreview();
+      });
+      return b;
+    });
+    const none = document.createElement('button');
+    none.type = 'button';
+    none.className = 'pair pair-none';
+    none.setAttribute('aria-pressed', String(!colorsOn));
+    none.textContent = t('brand_no_colors');
+    none.addEventListener('click', () => { colorsOn = false; renderPairs(); renderBrandPreview(); });
+    $('pairs').replaceChildren(...buttons, none);
+  }
+
+  function shownLogoUrl() {
+    if (removeLogoNext) return null;
+    return pendingLogoUrl || brand.logo_url || null;
+  }
+
+  function renderBrandPreview() {
+    const [c1, c2] = colorsOn ? brandColors() : ['#15171A', '#F4F6F5'];
+    $('brandPreview').style.background = c2;
+    $('bpBar').style.background = c1;
+    const n = parseInt(c1.slice(1), 16);
+    const lum = (0.299 * (n >> 16) + 0.587 * ((n >> 8) & 255) + 0.114 * (n & 255)) / 255;
+    $('bpBar').style.color = lum > 0.6 ? '#15171A' : '#FFFFFF';
+    $('bpName').textContent = $('shopName').value.trim() || t('brand_shop_sample');
+    const url = shownLogoUrl();
+    $('bpLogo').hidden = !url;
+    if (url) $('bpLogo').src = url;
+  }
+
+  function renderLogoBox() {
+    const url = shownLogoUrl();
+    $('logoPreview').hidden = !url;
+    $('logoEmpty').hidden = !!url;
+    $('removeLogo').hidden = !url;
+    if (url) {
+      $('logoPreview').src = url;
+      $('logoPreview').alt = t('brand_logo_alt');
+    }
+  }
+
   function renderBrand() {
     $('shopName').value = brand.shop_name || '';
     const colors = (brand.colors || '').split(',').map((c) => c.trim()).filter(Boolean);
-    $('useColors').checked = colors.length > 0;
+    colorsOn = colors.length > 0 || !(brand.shop_name || brand.logo_url);
     if (colors[0]) $('color1').value = colors[0];
     if (colors[1]) $('color2').value = colors[1];
-    $('logoRow').hidden = !brand.logo_url;
-    if (brand.logo_url) {
-      $('logoPreview').src = brand.logo_url;
-      $('logoPreview').alt = t('brand_logo_alt');
-    }
     const hasKit = !!(brand.logo_url || brand.colors || brand.shop_name);
     $('useBrand').disabled = !hasKit;
     if (!hasKit) $('useBrand').checked = false;
     $('brandHint').textContent = hasKit ? t('brand_ready') : t('brand_none');
+    $('openBrand').textContent = hasKit ? t('brand_edit') : t('brand_open');
+    $('brandStatus').textContent = hasKit ? t('brand_status_ready') : t('brand_status_empty');
+    $('brandStatus').className = 'badge ' + (hasKit ? 'badge-ok' : 'badge-muted');
+    renderPairs();
+    renderLogoBox();
+    renderBrandPreview();
   }
 
-  async function saveBrand(removeLogo) {
+  // Finds the two most common strong colors in the logo, ignoring white, black and see-through pixels.
+  function colorsFromImage(url) {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.onload = () => {
+        try {
+          const c = document.createElement('canvas');
+          c.width = 64; c.height = 64;
+          const ctx = c.getContext('2d');
+          ctx.drawImage(img, 0, 0, 64, 64);
+          const data = ctx.getImageData(0, 0, 64, 64).data;
+          const counts = {};
+          for (let i = 0; i < data.length; i += 4) {
+            const [r, g, b, a] = [data[i], data[i + 1], data[i + 2], data[i + 3]];
+            if (a < 128) continue;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            if (max > 235 && min > 235) continue;
+            if (max < 25) continue;
+            const key = [r >> 4, g >> 4, b >> 4].join(',');
+            counts[key] = (counts[key] || 0) + 1;
+          }
+          const ranked = Object.entries(counts).sort((x, y) => y[1] - x[1]).map(([k]) => k.split(',').map((v) => Number(v) * 16 + 8));
+          const hex = (rgb) => '#' + rgb.map((v) => v.toString(16).padStart(2, '0')).join('').toUpperCase();
+          const dist = (p, q) => Math.abs(p[0] - q[0]) + Math.abs(p[1] - q[1]) + Math.abs(p[2] - q[2]);
+          if (!ranked.length) return resolve(null);
+          const first = ranked[0];
+          const second = ranked.find((x) => dist(x, first) > 120) || [244, 246, 245];
+          resolve([hex(first), hex(second)]);
+        } catch (e) { resolve(null); }
+      };
+      img.onerror = () => resolve(null);
+      img.src = url;
+    });
+  }
+
+  async function pickLogo(file) {
+    const ba = $('brandAlert');
+    hideAlert(ba);
+    if (!file) return;
+    if (!TYPES.includes(file.type)) { showAlert(ba, t('file_type')); return; }
+    if (file.size > 2 * 1024 * 1024) { showAlert(ba, t('logo_big')); return; }
+    if (pendingLogoUrl) URL.revokeObjectURL(pendingLogoUrl);
+    pendingLogo = file;
+    pendingLogoUrl = URL.createObjectURL(file);
+    removeLogoNext = false;
+    logoColors = await colorsFromImage(pendingLogoUrl);
+    if (logoColors) {
+      colorsOn = true;
+      $('color1').value = logoColors[0];
+      $('color2').value = logoColors[1];
+    }
+    renderPairs();
+    renderLogoBox();
+    renderBrandPreview();
+  }
+
+  async function saveBrand() {
     const ba = $('brandAlert');
     hideAlert(ba);
     const fd = new FormData();
     fd.append('shop_name', $('shopName').value);
-    fd.append('colors', $('useColors').checked ? [$('color1').value, $('color2').value].join(',') : '');
-    const logo = $('logoFile').files[0];
-    if (logo) fd.append('logo', logo);
-    if (removeLogo) fd.append('remove_logo', '1');
+    fd.append('colors', brandColors().join(','));
+    if (pendingLogo) fd.append('logo', pendingLogo);
+    if (removeLogoNext) fd.append('remove_logo', '1');
+    const btn = $('saveBrand');
+    btn.disabled = true;
     try {
       brand = await api('/api/brand', { method: 'POST', form: fd });
-      $('logoFile').value = '';
+      if (pendingLogoUrl) URL.revokeObjectURL(pendingLogoUrl);
+      pendingLogo = null;
+      pendingLogoUrl = null;
+      removeLogoNext = false;
       renderBrand();
+      if (!$('useBrand').disabled) $('useBrand').checked = true;
       showAlert(ba, t('brand_saved'), true);
-    } catch (err) { showAlert(ba, err.message); }
+    } catch (err) {
+      showAlert(ba, err.message);
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   // ---------- Progress steps ----------
@@ -710,8 +878,34 @@
     updateCount();
   });
   $('savePreset').addEventListener('click', savePreset);
-  $('saveBrand').addEventListener('click', () => saveBrand(false));
-  $('removeLogo').addEventListener('click', () => saveBrand(true));
+  $('saveBrand').addEventListener('click', saveBrand);
+  $('removeLogo').addEventListener('click', () => {
+    if (pendingLogoUrl) URL.revokeObjectURL(pendingLogoUrl);
+    pendingLogo = null;
+    pendingLogoUrl = null;
+    removeLogoNext = !!brand.logo_url;
+    logoColors = null;
+    renderPairs();
+    renderLogoBox();
+    renderBrandPreview();
+  });
+  $('logoFile').addEventListener('change', (e) => { pickLogo(e.target.files[0]); e.target.value = ''; });
+  const logoDrop = $('logoDrop');
+  ['dragenter', 'dragover'].forEach((ev) => logoDrop.addEventListener(ev, (e) => { e.preventDefault(); logoDrop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach((ev) => logoDrop.addEventListener(ev, (e) => { e.preventDefault(); logoDrop.classList.remove('over'); }));
+  logoDrop.addEventListener('drop', (e) => pickLogo(e.dataTransfer.files[0]));
+  $('shopName').addEventListener('input', renderBrandPreview);
+  ['color1', 'color2'].forEach((id) => $(id).addEventListener('input', () => { colorsOn = true; renderPairs(); renderBrandPreview(); }));
+  [['drop', 'file'], ['logoDrop', 'logoFile']].forEach(([zone, input]) => {
+    $(zone).addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $(input).click(); }
+    });
+  });
+  $('openBrand').addEventListener('click', () => {
+    $('brandCard').open = true;
+    $('brandCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(() => $('logoDrop').focus(), 400);
+  });
   $('genBtn').addEventListener('click', generateAll);
   $('file').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
 
