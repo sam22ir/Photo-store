@@ -285,6 +285,10 @@ async function callImageApi(env, images, prompt, sizeValue, n) {
     fail(502, `The image service returned an error (${res.status}). You were not charged. Please try again.`);
   }
 
+  return readImages(res);
+}
+
+async function readImages(res) {
   const data = await res.json().catch(() => null);
   const out = [];
   for (const item of (data && data.data) || []) {
@@ -297,6 +301,44 @@ async function callImageApi(env, images, prompt, sizeValue, n) {
   }
   if (out.length === 0) fail(502, 'The image service returned no picture. You were not charged.');
   return out;
+}
+
+// Creates pictures from words only (no photo).
+async function callTextImageApi(env, prompt, sizeValue, n) {
+  let res;
+  try {
+    res = await fetch(`${env.IMAGE_API_BASE}/images/generations`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.IMAGE_API_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: env.IMAGE_MODEL, prompt, size: sizeValue, n }),
+    });
+  } catch {
+    fail(502, 'The image service could not be reached. You were not charged.');
+  }
+  if (!res.ok) {
+    console.error('Image API error', res.status, (await res.text()).slice(0, 300));
+    fail(502, `The image service returned an error (${res.status}). You were not charged. Please try again.`);
+  }
+  return readImages(res);
+}
+
+function buildTextPrompt(userPrompt) {
+  return (
+    'Create a high-quality, professional, realistic image for an online shop, exactly as described below. ' +
+    'If it asks for text on the image, write that text exactly as given, with the same characters and numbers. ' +
+    'Description: ' + userPrompt
+  );
+}
+
+// Text-only picture. With a logo, the logo is sent as the only image and the scene is drawn from scratch.
+async function runTextGeneration(env, prompt, logo, sizeValue, n) {
+  if (logo) {
+    const withLogo =
+      prompt + ' The attached image is only the shop logo, not the product: create the whole scene from scratch ' +
+      'and place this logo small and clean in one corner, without changing it.';
+    return callImageApi(env, [logo], withLogo, sizeValue, n);
+  }
+  return callTextImageApi(env, prompt, sizeValue, n);
 }
 
 async function readObject(env, key) {
@@ -344,8 +386,8 @@ function itemFromRow(r) {
     size: r.size || 'square',
     status: r.status,
     created_at: r.created_at,
-    input_key: r.input_key,
-    input_url: `/files/${r.input_key}`,
+    input_key: r.input_key || null,
+    input_url: r.input_key ? `/files/${r.input_key}` : null,
     output_url: `/files/${r.output_key}`,
   };
 }
@@ -402,7 +444,8 @@ async function generate(request, env) {
   const useCutout = form.get('cutout') === '1';
   const useBrand = form.get('brand') === '1';
 
-  if (!(file instanceof File)) fail(400, 'Please upload a product photo.');
+  const hasPhoto = file instanceof File && file.size > 0;
+  if (!hasPhoto) return generateFromText(env, user, form, sizeName, count, useBrand);
   if (!IMAGE_TYPES.includes(file.type)) fail(400, 'Use a JPG, PNG or WebP image.');
   if (file.size > MAX_BYTES) fail(413, 'The image must be 8 MB or smaller.');
   if (!Object.prototype.hasOwnProperty.call(STYLES, style) && !PROMPT_MODES.includes(style)) {
@@ -468,6 +511,42 @@ async function generate(request, env) {
   return json({ items, credits, free_retries_left: await freeRetriesLeft(env, user.id) }, 201);
 }
 
+async function loadLogo(env, key) {
+  if (!key) return null;
+  const obj = await env.BUCKET.get(key);
+  if (!obj) return null;
+  return {
+    bytes: new Uint8Array(await obj.arrayBuffer()),
+    type: (obj.httpMetadata && obj.httpMetadata.contentType) || 'image/png',
+    name: 'logo.png',
+  };
+}
+
+async function generateFromText(env, user, form, sizeName, count, useBrand) {
+  const userPrompt = String(form.get('prompt') || '').trim().slice(0, 1000);
+  if (userPrompt.length < 5) fail(400, 'Upload a product photo, or describe the picture you want.');
+  if (!Object.prototype.hasOwnProperty.call(SIZES, sizeName)) fail(400, 'Please choose a valid size.');
+  if (user.credits < count) fail(402, 'You do not have enough credits. Buy a pack to continue.');
+
+  let prompt = buildTextPrompt(userPrompt);
+  let logo = null;
+  let logoKey = null;
+  if (useBrand) {
+    const kit = await getBrandKit(env, user.id);
+    logo = await loadLogo(env, kit && kit.logo_key);
+    if (logo) logoKey = kit.logo_key;
+    prompt += brandPrompt(kit, false);
+  }
+
+  const outputs = (await runTextGeneration(env, prompt, logo, SIZES[sizeName], count)).slice(0, count);
+  const credits = await charge(env, user.id, outputs.length);
+  const items = await saveOutputs(env, user, outputs, {
+    batchId: crypto.randomUUID(), kind: 'new', style: 'text', size: sizeName,
+    inputKey: null, sourceKey: null, logoKey, prompt,
+  });
+  return json({ items, credits, free_retries_left: await freeRetriesLeft(env, user.id) }, 201);
+}
+
 async function loadOwnGeneration(env, userId, id) {
   const row = await env.DB.prepare('SELECT * FROM generations WHERE id = ? AND user_id = ?').bind(id, userId).first();
   if (!row) fail(404, 'Picture not found.');
@@ -482,12 +561,16 @@ async function retryGeneration(request, env, id) {
   const isFree = freeLeft > 0;
   if (!isFree && user.credits < 1) fail(402, 'No free retries left and no credits. Buy a pack to continue.');
 
-  const images = [await readObject(env, gen.source_key || gen.input_key)];
-  if (gen.logo_key) {
-    const logo = await env.BUCKET.get(gen.logo_key);
-    if (logo) images.push({ bytes: new Uint8Array(await logo.arrayBuffer()), type: 'image/png', name: 'logo.png' });
+  let outputs;
+  const sizeValue = SIZES[gen.size] || SIZES.square;
+  if (!gen.source_key && !gen.input_key) {
+    outputs = await runTextGeneration(env, gen.prompt, await loadLogo(env, gen.logo_key), sizeValue, 1);
+  } else {
+    const images = [await readObject(env, gen.source_key || gen.input_key)];
+    const logo = await loadLogo(env, gen.logo_key);
+    if (logo) images.push(logo);
+    outputs = await callImageApi(env, images, gen.prompt, sizeValue, 1);
   }
-  const outputs = await callImageApi(env, images, gen.prompt, SIZES[gen.size] || SIZES.square, 1);
 
   const credits = isFree ? user.credits : await charge(env, user.id, 1);
   const items = await saveOutputs(env, user, outputs.slice(0, 1), {

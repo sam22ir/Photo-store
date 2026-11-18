@@ -527,3 +527,7 @@ input[type="color"] { width: 52px; height: 44px; border: 1px solid var(--border)
 #promptCount { white-space: nowrap; }
 .more { padding: 0; }
 .more .brand-card { border-bottom: 1px solid var(--border); }
+.gen-single { position: relative; width: 100%; background: var(--alt); border-radius: var(--r-sm); overflow: hidden; }
+.gen .gen-single img { width: 100%; height: 100%; aspect-ratio: auto; object-fit: contain; display: block; }
+.upload-hint.no-photo { color: var(--accent-h); font-weight: 600; }
+.thumbs:not(:empty) ~ .upload-hint.no-photo { display: none; }
