@@ -3,209 +3,368 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Lamsa Studio - Product photos from your phone</title>
-<meta name="description" content="Turn a phone photo of your product into a professional picture for Instagram and Facebook.">
+<title>Lamsa Studio - Product photos that sell</title>
+<meta name="description" content="Turn a phone photo of your product, or just a few words, into a professional picture for Instagram, Facebook and TikTok.">
+<meta name="theme-color" content="#0B0D10">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&family=Noto+Kufi+Arabic:wght@400;600;700&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="assets/style.css">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600&family=Noto+Kufi+Arabic:wght@400;500;600&family=Noto+Naskh+Arabic:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/landing.css">
 </head>
 <body>
 
-<header class="site-header">
-  <div class="wrap nav">
-    <a class="logo" href="index.html"><span class="logo-mark" aria-hidden="true"></span><span>Lamsa Studio</span></a>
+<!-- Shared drawing of the hills, used in the hero and the final call to action -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <defs>
+    <linearGradient id="hillFar" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#5A5560"/><stop offset="1" stop-color="#2E2B33"/></linearGradient>
+    <linearGradient id="hillMid" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#46523E"/><stop offset="1" stop-color="#1E241C"/></linearGradient>
+    <linearGradient id="hillNear" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#3B4A31"/><stop offset="1" stop-color="#121710"/></linearGradient>
+    <linearGradient id="bush" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#B9707A"/><stop offset=".35" stop-color="#7E4A4E"/><stop offset="1" stop-color="#0B0D10"/></linearGradient>
+    <filter id="foliage" x="-5%" y="-20%" width="110%" height="140%">
+      <feTurbulence type="fractalNoise" baseFrequency="0.035 0.06" numOctaves="4" seed="7" result="n"/>
+      <feDisplacementMap in="SourceGraphic" in2="n" scale="38" xChannelSelector="R" yChannelSelector="G" result="d"/>
+      <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="3" result="g"/>
+      <feColorMatrix in="g" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 -1.4 1.1" result="speck"/>
+      <feComposite in="d" in2="speck" operator="in" result="tex"/>
+      <feMerge><feMergeNode in="d"/><feMergeNode in="tex"/></feMerge>
+    </filter>
+    <filter id="soft"><feGaussianBlur stdDeviation="1.2"/></filter>
+  </defs>
+</svg>
+
+<header class="nav" id="top">
+  <div class="wrap nav-in">
+    <a class="logo" href="index.html" aria-label="Lamsa Studio home">
+      <span class="logo-mark" aria-hidden="true"></span><span class="logo-word">Lamsa Studio</span>
+    </a>
     <nav class="nav-links" aria-label="Main">
       <a href="#how" data-i18n="nav_how">How it works</a>
-      <a href="#styles" data-i18n="nav_styles">Styles</a>
+      <a href="#ideas" data-i18n="lp_nav_ideas">Ideas</a>
       <a href="#pricing" data-i18n="nav_pricing">Pricing</a>
       <a href="#faq" data-i18n="nav_faq">FAQ</a>
     </nav>
     <div class="nav-right">
       <select id="langSel" class="lang" aria-label="Language">
-        <option value="en">English</option>
-        <option value="fr">Français</option>
-        <option value="ar">العربية</option>
+        <option value="en">EN</option>
+        <option value="fr">FR</option>
+        <option value="ar">ع</option>
       </select>
-      <a class="btn btn-ghost btn-sm" href="login.html" data-i18n="login" id="navAuth">Log in</a>
+      <a class="btn btn-quiet" href="login.html" data-i18n="login" id="navAuth">Log in</a>
+      <a class="btn btn-light" href="login.html?mode=signup" data-i18n="lp_start" id="navStart">Start free</a>
     </div>
   </div>
 </header>
 
 <main>
-  <section class="wrap hero">
-    <div>
-      <h1 data-i18n="hero_title">Turn a phone photo into a picture that sells.</h1>
-      <p class="ar-line" lang="ar" dir="rtl">صوّر منتجك بالهاتف، ونحن نحوّله إلى صورة احترافية</p>
-      <p class="lead" data-i18n="hero_sub">Upload a simple photo of your product, pick a style, and get a clean professional picture for your Instagram or Facebook shop in about one minute.</p>
+  <!-- HERO -->
+  <section class="hero">
+    <div class="sky" aria-hidden="true"></div>
+    <div class="wrap hero-copy">
+      <a class="pill" href="#how">
+        <span data-i18n="lp_badge">New: create pictures from words only</span>
+        <span class="pill-arrow" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M5 12h14M13 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+      </a>
+      <h1 class="display" data-i18n="lp_hero_title">Product photos that sell, made from your phone</h1>
+      <p class="lead" data-i18n="lp_hero_sub">Upload a simple photo of your product, or just describe it. Get studio pictures, ads and posts for Instagram, Facebook and TikTok in about a minute.</p>
       <div class="cta-row">
-        <a class="btn btn-primary" href="login.html?mode=signup" data-i18n="hero_try">Try 3 pictures free</a>
-        <a class="btn btn-ghost" href="#styles" data-i18n="hero_examples">See examples</a>
+        <a class="btn btn-light btn-lg" href="login.html?mode=signup" data-i18n="hero_try" data-cta>Try 3 pictures free</a>
+        <a class="btn btn-glass btn-lg" href="#how">
+          <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M8 5v14l11-7z" fill="currentColor"/></svg>
+          <span data-i18n="lp_see_how">See how it works</span>
+        </a>
+      </div>
+      <p class="fine" data-i18n="lp_pay_note">Pay with BaridiMob or CCP. No card needed.</p>
+    </div>
+
+    <!-- Glass mock-up of the studio -->
+    <div class="wrap mock-wrap">
+      <div class="mock" aria-hidden="true">
+        <div class="mock-top">
+          <span class="logo-mark sm"></span>
+          <span class="mock-credits">3 <span data-i18n="lp_mock_credits">credits</span></span>
+        </div>
+        <p class="mock-hello" data-i18n="lp_mock_hello">What picture do you want today?</p>
+        <div class="mock-box">
+          <p class="mock-typing"><span id="typing"></span><span class="caret"></span></p>
+          <div class="mock-tools">
+            <span class="tool"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.2" fill="none" stroke="currentColor" stroke-width="1.8"/></svg></span>
+            <span class="tool"><svg viewBox="0 0 24 24" width="18" height="18"><rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8"/><path d="M3 16l5-5 4 4 3-3 6 6" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+            <span class="tool"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg></span>
+            <span class="send"><svg viewBox="0 0 24 24" width="18" height="18"><path d="M12 19V5M6 11l6-6 6 6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></span>
+          </div>
+        </div>
+        <div class="mock-chips" id="mockChips"></div>
+        <div class="mock-results">
+          <div class="mr mr-1"><i></i></div>
+          <div class="mr mr-2"><i></i></div>
+          <div class="mr mr-3"><i></i><b>-30%</b></div>
+          <div class="mr mr-4"><i></i></div>
+        </div>
       </div>
     </div>
 
-    <div class="ba">
-      <svg viewBox="0 0 520 400" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="A cluttered phone photo next to a clean product picture">
-        <rect x="8" y="8" width="248" height="384" rx="16" fill="#E7E9EC"/>
-        <rect x="264" y="8" width="248" height="384" rx="16" fill="#DCEFE8"/>
-        <!-- before: messy table -->
-        <rect x="8" y="290" width="248" height="102" rx="0" fill="#B9C0C8"/>
-        <rect x="40" y="250" width="60" height="44" rx="6" fill="#9AA3AD"/>
-        <rect x="170" y="262" width="40" height="30" rx="4" fill="#8E97A2" transform="rotate(-8 190 277)"/>
-        <rect x="112" y="110" width="44" height="170" rx="12" fill="#7F8893"/>
-        <rect x="104" y="80" width="60" height="38" rx="8" fill="#6B7480"/>
-        <rect x="124" y="180" width="26" height="30" rx="4" fill="#D5DAE0"/>
-        <text x="28" y="44" font-family="Inter, sans-serif" font-size="16" fill="#3D434B" data-i18n="ba_before">Phone photo</text>
-        <!-- after: clean studio -->
-        <rect x="264" y="290" width="248" height="102" rx="0" fill="#0B6B52" opacity="0.12"/>
-        <ellipse cx="388" cy="312" rx="92" ry="14" fill="#0B6B52" opacity="0.2"/>
-        <rect x="358" y="110" width="60" height="180" rx="14" fill="#15171A"/>
-        <rect x="350" y="72" width="76" height="44" rx="9" fill="#0B6B52"/>
-        <rect x="372" y="170" width="32" height="34" rx="6" fill="#FFFFFF" opacity="0.9"/>
-        <text x="284" y="44" font-family="Space Grotesk, sans-serif" font-size="16" font-weight="700" fill="#0B6B52" data-i18n="ba_after">Lamsa Studio</text>
-      </svg>
+    <svg class="hills" viewBox="0 0 1440 420" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M0 210 C 180 120 320 150 470 190 C 620 230 760 120 930 140 C 1100 160 1240 110 1440 170 L1440 420 L0 420Z" fill="url(#hillFar)" opacity=".85" filter="url(#soft)"/>
+      <path d="M0 270 C 160 200 300 210 420 250 C 560 300 700 220 860 230 C 1030 240 1180 200 1440 250 L1440 420 L0 420Z" fill="url(#hillMid)"/>
+      <path d="M0 330 C 220 270 380 300 560 320 C 760 345 940 280 1120 300 C 1260 315 1360 300 1440 310 L1440 420 L0 420Z" fill="url(#hillNear)"/>
+    </svg>
+    <svg class="bushes" viewBox="0 0 1440 260" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M-40 120 C 80 70 160 110 260 80 C 360 50 420 110 540 95 C 640 82 700 40 820 70 C 940 100 1000 60 1110 75 C 1230 92 1300 50 1480 90 L1480 300 L-40 300Z" fill="url(#bush)" filter="url(#foliage)"/>
+    </svg>
+  </section>
+
+  <!-- PLATFORMS -->
+  <section class="platforms">
+    <div class="wrap platforms-in">
+      <p data-i18n="lp_made_for">Made for sellers on</p>
+      <ul>
+        <li>Instagram</li><li>Facebook</li><li>TikTok</li><li>WhatsApp</li><li>Ouedkniss</li>
+      </ul>
     </div>
   </section>
 
-  <section id="how" class="section alt">
+  <!-- STATEMENT + FACTS -->
+  <section class="statement">
     <div class="wrap">
-      <div class="section-head">
-        <h2 data-i18n="steps_title">Three steps. One minute.</h2>
+      <div class="tiles" aria-hidden="true">
+        <span class="tile"><svg viewBox="0 0 24 24" width="22" height="22"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.2" fill="none" stroke="currentColor" stroke-width="1.6"/></svg></span>
+        <span class="tile tile-main"><svg viewBox="0 0 24 24" width="34" height="34"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg></span>
+        <span class="tile"><svg viewBox="0 0 24 24" width="22" height="22"><rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M3 16l5-5 4 4 3-3 6 6" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/></svg></span>
       </div>
-      <div class="grid-3">
-        <div class="card">
-          <div class="step-num">1</div>
-          <h3 data-i18n="step1_t">Upload</h3>
-          <p data-i18n="step1_d">Take a photo with your phone and upload it. A simple or messy background is fine.</p>
+      <p class="tag"><svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M5 12l5 5 9-10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg><span data-i18n="lp_tag">Built in Tebessa, for Algerian shops</span></p>
+      <h2 class="display md" data-i18n="lp_statement">One phone photo becomes studio pictures, ads and posts for your shop.</h2>
+      <dl class="facts">
+        <div><dt data-i18n="lp_f1_v">~1 min</dt><dd data-i18n="lp_f1_l">For each picture</dd></div>
+        <div><dt data-i18n="lp_f2_v">3</dt><dd data-i18n="lp_f2_l">Free pictures to start</dd></div>
+        <div><dt data-i18n="lp_f3_v">60 DZD</dt><dd data-i18n="lp_f3_l">Per picture, in the Pro pack</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how" id="how">
+    <div class="wrap">
+      <p class="eyebrow" data-i18n="nav_how">How it works</p>
+      <h2 class="display md" data-i18n="steps_title">Three steps. One minute.</h2>
+      <ol class="steps">
+        <li>
+          <span class="num">01</span>
+          <h3 data-i18n="lp_s1_t">Add your product</h3>
+          <p data-i18n="lp_s1_d">Take a photo with your phone, even on a messy table. No photo? Skip it.</p>
+          <div class="s-art s-art-1" aria-hidden="true"><i></i></div>
+        </li>
+        <li>
+          <span class="num">02</span>
+          <h3 data-i18n="lp_s2_t">Describe the picture</h3>
+          <p data-i18n="lp_s2_d">Write what you want in Arabic, French or English, or tap a ready idea.</p>
+          <div class="s-art s-art-2" aria-hidden="true"><span></span><span></span><span></span></div>
+        </li>
+        <li>
+          <span class="num">03</span>
+          <h3 data-i18n="lp_s3_t">Download and post</h3>
+          <p data-i18n="lp_s3_d">Pick the best version, sized for posts, Stories or Facebook, and share it.</p>
+          <div class="s-art s-art-3" aria-hidden="true"><i></i><i></i></div>
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <!-- WHY / FEATURE PANEL -->
+  <section class="why">
+    <div class="wrap">
+      <div class="panel">
+        <div class="panel-demo">
+          <div class="demo-card">
+            <div class="demo-head">
+              <span data-i18n="lp_demo_title">Before and after</span>
+              <span class="demo-hint" data-i18n="lp_demo_hint">Drag the line</span>
+            </div>
+            <div id="demoCompare" class="demo-compare"></div>
+          </div>
         </div>
-        <div class="card">
-          <div class="step-num">2</div>
-          <h3 data-i18n="step2_t">Choose a style</h3>
-          <p data-i18n="step2_d">Studio, luxury, outdoor or ad poster. For the ad, add your text or price.</p>
-        </div>
-        <div class="card">
-          <div class="step-num">3</div>
-          <h3 data-i18n="step3_t">Download</h3>
-          <p data-i18n="step3_d">Your picture is ready in about a minute. Download it and post it.</p>
+        <div class="panel-copy">
+          <span class="panel-icon" aria-hidden="true"><span class="logo-mark"></span></span>
+          <h2 class="panel-title" data-i18n="lp_why_title">Your product stays exactly the same</h2>
+          <p class="panel-text" data-i18n="lp_why_text">Only the scene around it changes. Same shape, same colors, same label, so customers get what they see.</p>
+          <ul class="checks">
+            <li data-i18n="lp_c1">Up to 4 versions at once, keep the best</li>
+            <li data-i18n="lp_c2">Your logo and colors with the brand kit</li>
+            <li data-i18n="lp_c3">5 free retries every 12 hours</li>
+            <li data-i18n="lp_c4">Create from words only, no photo needed</li>
+          </ul>
+          <a class="btn btn-light" href="login.html?mode=signup" data-i18n="hero_try" data-cta>Try 3 pictures free</a>
         </div>
       </div>
     </div>
   </section>
 
-  <section id="styles" class="section">
+  <!-- IDEAS -->
+  <section class="ideas" id="ideas">
     <div class="wrap">
-      <div class="section-head">
-        <h2 data-i18n="styles_title">Four styles for your products</h2>
-        <p data-i18n="styles_sub">Every picture keeps your product exactly as it is.</p>
-      </div>
-      <div class="grid-4">
-        <div class="card">
-          <div class="ph" data-i18n="example_ph">[Example image]</div>
-          <h3 data-i18n="st_studio">Studio</h3>
-          <p data-i18n="st_studio_d">Clean white background with soft shadows.</p>
-        </div>
-        <div class="card">
-          <div class="ph" data-i18n="example_ph">[Example image]</div>
-          <h3 data-i18n="st_luxury">Luxury</h3>
-          <p data-i18n="st_luxury_d">Dark, elegant background with dramatic light.</p>
-        </div>
-        <div class="card">
-          <div class="ph" data-i18n="example_ph">[Example image]</div>
-          <h3 data-i18n="st_outdoor">Outdoor</h3>
-          <p data-i18n="st_outdoor_d">Natural daylight, lifestyle scene.</p>
-        </div>
-        <div class="card">
-          <div class="ph" data-i18n="example_ph">[Example image]</div>
-          <h3 data-i18n="st_ad">Ad poster</h3>
-          <p data-i18n="st_ad_d">Square Instagram ad with your text and price.</p>
-        </div>
-      </div>
+      <p class="eyebrow" data-i18n="lp_nav_ideas">Ideas</p>
+      <h2 class="display md" data-i18n="lp_ideas_title">Start from a ready idea</h2>
+      <p class="sub" data-i18n="lp_ideas_sub">Tap one in the studio, change the words, and create.</p>
+      <div class="idea-grid" id="ideaGrid"></div>
     </div>
   </section>
 
-  <section id="pricing" class="section alt">
+  <!-- PRICING -->
+  <section class="pricing" id="pricing">
     <div class="wrap">
-      <div class="section-head">
-        <h2 data-i18n="pricing_title">Credit packs</h2>
-        <p data-i18n="pricing_sub">One credit makes one picture. Pay once, use them when you need them.</p>
-      </div>
-      <div class="grid-3">
-        <div class="card pack-card">
+      <p class="eyebrow" data-i18n="nav_pricing">Pricing</p>
+      <h2 class="display md" data-i18n="pricing_title">Credit packs</h2>
+      <p class="sub" data-i18n="pricing_sub">One credit makes one picture. Pay once, use them when you need them.</p>
+      <div class="packs">
+        <div class="pack">
           <h3>Starter</h3>
-          <div class="price">1,000 <small>DZD</small></div>
-          <p>10 <span data-i18n="pk_credits">credits</span></p>
-          <a class="btn btn-ghost" href="buy.html?pack=starter" data-i18n="pk_choose">Choose this pack</a>
+          <p class="price">1,000 <small>DZD</small></p>
+          <p class="pk-c">10 <span data-i18n="pk_credits">credits</span></p>
+          <a class="btn btn-glass" href="buy.html?pack=starter" data-i18n="pk_choose">Choose this pack</a>
         </div>
-        <div class="card pack-card pack-featured">
-          <span class="tag" data-i18n="most_popular">Most popular</span>
+        <div class="pack pack-hot">
+          <span class="hot" data-i18n="most_popular">Most popular</span>
           <h3>Shop</h3>
-          <div class="price">2,500 <small>DZD</small></div>
-          <p>30 <span data-i18n="pk_credits">credits</span></p>
-          <a class="btn btn-primary" href="buy.html?pack=shop" data-i18n="pk_choose">Choose this pack</a>
+          <p class="price">2,500 <small>DZD</small></p>
+          <p class="pk-c">30 <span data-i18n="pk_credits">credits</span></p>
+          <a class="btn btn-light" href="buy.html?pack=shop" data-i18n="pk_choose">Choose this pack</a>
         </div>
-        <div class="card pack-card">
+        <div class="pack">
           <h3>Pro</h3>
-          <div class="price">6,000 <small>DZD</small></div>
-          <p>100 <span data-i18n="pk_credits">credits</span></p>
-          <a class="btn btn-ghost" href="buy.html?pack=pro" data-i18n="pk_choose">Choose this pack</a>
+          <p class="price">6,000 <small>DZD</small></p>
+          <p class="pk-c">100 <span data-i18n="pk_credits">credits</span></p>
+          <a class="btn btn-glass" href="buy.html?pack=pro" data-i18n="pk_choose">Choose this pack</a>
         </div>
       </div>
-      <div class="card note">
-        <h3 data-i18n="pay_title">How to pay</h3>
-        <p data-i18n="pay_text">Pay with BaridiMob or CCP, then upload a photo of the receipt. We check it and add your credits, usually within a few hours.</p>
-      </div>
+      <p class="pay"><strong data-i18n="pay_title">How to pay</strong> <span data-i18n="pay_text">Pay with BaridiMob or CCP, then upload a photo of the receipt.</span></p>
     </div>
   </section>
 
-  <section id="faq" class="section">
-    <div class="wrap" style="max-width:820px">
-      <div class="section-head">
-        <h2 data-i18n="faq_title">Questions</h2>
-      </div>
-      <details>
-        <summary data-i18n="faq1_q">Does the AI change my product?</summary>
-        <p data-i18n="faq1_a">No. The model is told to keep the product identical in shape, colour and label. Check the result before you post.</p>
-      </details>
-      <details>
-        <summary data-i18n="faq2_q">Do I get free pictures?</summary>
-        <p data-i18n="faq2_a">Yes. Every new account gets 3 free credits to try the service.</p>
-      </details>
-      <details>
-        <summary data-i18n="faq3_q">What if a picture fails?</summary>
-        <p data-i18n="faq3_a">You are not charged. A credit is only used when your picture is ready.</p>
-      </details>
-      <details>
-        <summary data-i18n="faq4_q">How long does approval take?</summary>
-        <p data-i18n="faq4_a">We check each receipt by hand. Your credits appear once it is approved.</p>
-      </details>
+  <!-- FAQ -->
+  <section class="faq" id="faq">
+    <div class="wrap narrow">
+      <h2 class="display md" data-i18n="faq_title">Questions</h2>
+      <details><summary data-i18n="faq1_q">Does the AI change my product?</summary><p data-i18n="faq1_a"></p></details>
+      <details><summary data-i18n="lp_faq5_q">Can I create a picture without a photo?</summary><p data-i18n="lp_faq5_a"></p></details>
+      <details><summary data-i18n="faq2_q">Do I get free pictures?</summary><p data-i18n="faq2_a"></p></details>
+      <details><summary data-i18n="faq3_q">What if a picture fails?</summary><p data-i18n="faq3_a"></p></details>
+      <details><summary data-i18n="faq4_q">How long does approval take?</summary><p data-i18n="faq4_a"></p></details>
     </div>
   </section>
 
-  <section class="section dark">
-    <div class="wrap" style="text-align:center">
-      <h2 data-i18n="final_title">Make your next product picture today.</h2>
-      <a class="btn btn-primary" href="login.html?mode=signup" data-i18n="final_btn">Start with 3 free pictures</a>
+  <!-- FINAL CTA -->
+  <section class="final">
+    <div class="sky sky-final" aria-hidden="true"></div>
+    <div class="wrap final-in">
+      <h2 class="display" data-i18n="final_title">Make your next product picture today.</h2>
+      <a class="btn btn-light btn-lg" href="login.html?mode=signup" data-i18n="final_btn" data-cta>Start with 3 free pictures</a>
     </div>
+    <svg class="hills" viewBox="0 0 1440 420" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M0 250 C 200 170 360 200 520 230 C 700 265 860 180 1020 200 C 1180 220 1300 180 1440 210 L1440 420 L0 420Z" fill="url(#hillFar)" opacity=".8" filter="url(#soft)"/>
+      <path d="M0 310 C 200 250 380 270 560 300 C 740 330 920 260 1100 280 C 1260 296 1360 280 1440 290 L1440 420 L0 420Z" fill="url(#hillNear)"/>
+    </svg>
+    <svg class="bushes" viewBox="0 0 1440 260" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+      <path d="M-40 140 C 120 90 220 130 340 110 C 460 90 540 140 660 120 C 780 100 860 70 980 100 C 1100 130 1200 90 1480 120 L1480 300 L-40 300Z" fill="url(#bush)" filter="url(#foliage)"/>
+    </svg>
   </section>
 </main>
 
-<footer class="footer">
-  <div class="wrap" data-i18n="footer_text">© 2026 Lamsa Studio · Tebessa, Algeria</div>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <a class="logo" href="#top"><span class="logo-mark" aria-hidden="true"></span><span class="logo-word">Lamsa Studio</span></a>
+    <p data-i18n="footer_text">© 2026 Lamsa Studio · Tebessa, Algeria</p>
+  </div>
 </footer>
 
 <script src="assets/i18n.js"></script>
+<script src="assets/templates.js"></script>
+<script src="assets/compare.js"></script>
 <script>
-  // Signed-in visitors go straight to their studio from every button.
-  fetch('/api/me', { credentials: 'same-origin' })
-    .then((r) => (r.ok ? r.json() : null))
-    .then((user) => {
-      if (!user) return;
-      document.querySelectorAll('a[href^="login.html"]').forEach((a) => { a.href = 'app.html'; });
-      const nav = document.getElementById('navAuth');
-      nav.dataset.i18n = 'my_studio';
-      nav.textContent = window.i18n.t('my_studio');
-    })
-    .catch(() => {});
+  (function () {
+    const t = (k) => window.i18n.t(k);
+    const reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const TPL_ART = {
+      studio: ['#F4F4F2', '#2E6B57'], luxury: ['#17181C', '#D9B566'], outdoor: ['#7FAE6A', '#FFFFFF'], ad: ['#F2B544', '#FFFFFF'],
+      marble: ['#ECEAE6', '#FFFFFF'], hand: ['#C9A98A', '#FFF7EE'], flatlay: ['#F6D9E3', '#FFFFFF'],
+      nature: ['#5E8C5A', '#F2F7EF'], food: ['#8A5A3B', '#F7E9D7'], ramadan: ['#2B2350', '#E8B94A'],
+      eid: ['#0F5C46', '#E2C46B'], sale: ['#E63946', '#FFFFFF'], tech: ['#101828', '#4FA3FF'], model: ['#D7C2B0', '#3D434B'],
+    };
+    const list = window.LAMSA_TEMPLATES || [];
+
+    // Signed in? Send every call-to-action to the studio.
+    fetch('/api/me', { credentials: 'same-origin' })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((user) => {
+        if (!user) return;
+        document.querySelectorAll('a[href^="login.html"]').forEach((a) => { a.href = 'app.html'; });
+        const nav = document.getElementById('navAuth');
+        nav.hidden = true;
+        const start = document.getElementById('navStart');
+        start.dataset.i18n = 'my_studio';
+        start.textContent = t('my_studio');
+      })
+      .catch(() => {});
+
+    function art(id, cls) {
+      const c = TPL_ART[id] || ['#2A2D33', '#FFFFFF'];
+      return `<span class="${cls}" style="background:${c[0]}"><i style="background:${c[1]}"></i></span>`;
+    }
+
+    function renderIdeas() {
+      const lang = window.i18n.lang;
+      const grid = document.getElementById('ideaGrid');
+      grid.innerHTML = '';
+      list.forEach((tp) => {
+        const a = document.createElement('a');
+        a.className = 'idea';
+        a.href = document.getElementById('navStart').getAttribute('href');
+        a.innerHTML = art(tp.id, 'idea-art') + '<span class="idea-name"></span>';
+        a.querySelector('.idea-name').textContent = tp.name[lang] || tp.name.en;
+        grid.append(a);
+      });
+      const chips = document.getElementById('mockChips');
+      chips.innerHTML = '';
+      ['studio', 'luxury', 'ramadan', 'sale'].forEach((id) => {
+        const tp = list.find((x) => x.id === id);
+        if (!tp) return;
+        const s = document.createElement('span');
+        s.className = 'mchip';
+        s.innerHTML = art(id, 'mchip-art') + '<span></span>';
+        s.lastChild.textContent = tp.name[lang] || tp.name.en;
+        chips.append(s);
+      });
+    }
+
+    // Typing demo in the hero card
+    let timer = null;
+    function startTyping() {
+      clearTimeout(timer);
+      const el = document.getElementById('typing');
+      const lines = [t('lp_type1'), t('lp_type2'), t('lp_type3')];
+      if (reduce) { el.textContent = lines[0]; return; }
+      let li = 0, ci = 0, del = false;
+      const step = () => {
+        const line = lines[li];
+        el.textContent = line.slice(0, ci);
+        if (!del && ci < line.length) { ci++; timer = setTimeout(step, 38); }
+        else if (!del) { del = true; timer = setTimeout(step, 1800); }
+        else if (ci > 0) { ci -= 2; timer = setTimeout(step, 14); }
+        else { del = false; li = (li + 1) % lines.length; timer = setTimeout(step, 300); }
+      };
+      step();
+    }
+
+    // Before / after demo with drawn pictures
+    const svg = (s) => 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(s);
+    const BEFORE = svg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><rect width="400" height="400" fill="#9C958C"/><rect y="270" width="400" height="130" fill="#7A7268"/><rect x="40" y="250" width="90" height="50" rx="6" fill="#5F574E" transform="rotate(-8 85 275)"/><rect x="285" y="262" width="70" height="40" rx="6" fill="#6B6359" transform="rotate(10 320 282)"/><rect x="175" y="95" width="50" height="40" rx="8" fill="#4A4A4A"/><rect x="150" y="130" width="100" height="160" rx="18" fill="#5A6B64"/><rect x="170" y="190" width="60" height="34" rx="4" fill="#C9C2B8"/></svg>');
+    const AFTER = svg('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 400"><defs><radialGradient id="g" cx=".5" cy=".4" r=".7"><stop offset="0" stop-color="#2A2622"/><stop offset="1" stop-color="#0E0D0C"/></radialGradient><linearGradient id="b" x1="0" x2="1"><stop offset="0" stop-color="#2E6B57"/><stop offset=".55" stop-color="#4F9A80"/><stop offset="1" stop-color="#245546"/></linearGradient></defs><rect width="400" height="400" fill="url(#g)"/><ellipse cx="200" cy="300" rx="120" ry="16" fill="#000" opacity=".6"/><rect x="120" y="292" width="160" height="10" rx="5" fill="#3A332B"/><rect x="175" y="95" width="50" height="40" rx="8" fill="#D9B566"/><rect x="150" y="130" width="100" height="160" rx="18" fill="url(#b)"/><rect x="170" y="190" width="60" height="34" rx="4" fill="#F4EFE6"/><circle cx="300" cy="90" r="60" fill="#D9B566" opacity=".12"/></svg>');
+    function renderDemo() {
+      const box = document.getElementById('demoCompare');
+      box.innerHTML = '';
+      if (window.createCompare) box.append(window.createCompare(BEFORE, AFTER, { beforeLabel: t('cmp_before'), afterLabel: t('cmp_after') }));
+    }
+
+    document.addEventListener('i18n:change', () => { renderIdeas(); startTyping(); renderDemo(); });
+  })();
 </script>
 </body>
 </html>
