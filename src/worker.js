@@ -24,7 +24,7 @@ const MAX_BYTES = 8 * 1024 * 1024;
 const SESSION_MS = 30 * 24 * 3600 * 1000;
 const METHODS = ['baridimob', 'ccp'];
 const STATUSES = ['pending', 'approved', 'rejected'];
-const KEY_PATTERN = /^(inputs|outputs|receipts)\/[A-Za-z0-9-]+(\.[a-z]+)?$/;
+const KEY_PATTERN = /^(inputs|outputs|receipts|logos)\/[A-Za-z0-9-]+(\.[a-z]+)?$/;
 
 class HttpError extends Error {
   constructor(status, message) {
@@ -197,35 +197,183 @@ async function me(request, env) {
     email: user.email,
     credits: user.credits,
     is_admin: !!user.is_admin,
+    free_retries_left: await freeRetriesLeft(env, user.id),
   });
 }
 
 // ---------- Generation ----------
 
 const PROMPT_MODES = ['template', 'custom'];
+const MAX_VERSIONS = 4;
+const FREE_RETRIES = 5;
+const FREE_RETRY_WINDOW_MS = 12 * 3600 * 1000;
+
+const KEEP_PRODUCT =
+  'Turn this phone photo into a professional product photo. Keep the product itself identical: ' +
+  'same shape, colors, labels and details. ';
+
+const CUTOUT_PROMPT =
+  'Remove the background completely. Keep only the product, exactly as it is (same shape, colors, ' +
+  'labels, text and details), centered on a plain pure white background. Do not change the product.';
 
 function buildPrompt(style, text, userPrompt) {
-  const base =
-    'Turn this phone photo into a professional product photo. Keep the product itself identical: ' +
-    'same shape, colors, labels and details. ';
   if (PROMPT_MODES.includes(style)) {
     return (
-      base +
+      KEEP_PRODUCT +
       'Create the scene the customer describes below. If it asks for text on the image, write that text ' +
       'exactly as given, with the same characters and numbers. Customer description: ' +
       userPrompt
     );
   }
-  let prompt = base + `Style: ${STYLES[style]}.`;
+  let prompt = KEEP_PRODUCT + `Style: ${STYLES[style]}.`;
   if (text) {
     prompt += ` Write this text on the image exactly as given, with the same characters and numbers: "${text}".`;
   }
   return prompt;
 }
 
+function brandPrompt(kit, hasLogo) {
+  if (!kit) return '';
+  let out = ' Branding:';
+  if (hasLogo) out += " The second image is the shop's logo. Place it small and clean in one corner, without changing it.";
+  if (kit.colors) out += ` Use these brand colors where they fit the design: ${kit.colors}.`;
+  if (kit.shop_name) out += ` If the design has text, you may add the shop name "${kit.shop_name}".`;
+  return out === ' Branding:' ? '' : out;
+}
+
+// Sends one or more images and a prompt to the image service. Returns a list of PNG byte arrays.
+async function callImageApi(env, images, prompt, sizeValue, n) {
+  const body = new FormData();
+  body.append('model', env.IMAGE_MODEL);
+  const field = images.length > 1 ? 'image[]' : 'image';
+  for (const img of images) {
+    body.append(field, new Blob([img.bytes], { type: img.type }), img.name);
+  }
+  body.append('prompt', prompt);
+  body.append('size', sizeValue);
+  body.append('n', String(n));
+
+  let res;
+  try {
+    res = await fetch(`${env.IMAGE_API_BASE}/images/edits`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.IMAGE_API_KEY}` },
+      body,
+    });
+  } catch {
+    fail(502, 'The image service could not be reached. You were not charged.');
+  }
+  if (!res.ok) {
+    console.error('Image API error', res.status, (await res.text()).slice(0, 300));
+    fail(502, `The image service returned an error (${res.status}). You were not charged. Please try again.`);
+  }
+
+  const data = await res.json().catch(() => null);
+  const out = [];
+  for (const item of (data && data.data) || []) {
+    if (item.b64_json) {
+      out.push(Uint8Array.from(atob(item.b64_json), (c) => c.charCodeAt(0)));
+    } else if (item.url) {
+      const img = await fetch(item.url);
+      if (img.ok) out.push(new Uint8Array(await img.arrayBuffer()));
+    }
+  }
+  if (out.length === 0) fail(502, 'The image service returned no picture. You were not charged.');
+  return out;
+}
+
+async function readObject(env, key) {
+  const obj = await env.BUCKET.get(key);
+  if (!obj) fail(404, 'The original photo is no longer available.');
+  return {
+    bytes: new Uint8Array(await obj.arrayBuffer()),
+    type: (obj.httpMetadata && obj.httpMetadata.contentType) || 'image/png',
+    name: key.split('/').pop() + '.png',
+  };
+}
+
+// Charges `amount` credits. Returns the new balance, or fails without charging.
+async function charge(env, userId, amount) {
+  const row = await env.DB.prepare(
+    'UPDATE users SET credits = credits - ? WHERE id = ? AND credits >= ? RETURNING credits'
+  )
+    .bind(amount, userId, amount)
+    .first();
+  if (!row) fail(402, 'You do not have enough credits. Buy a pack to continue.');
+  return row.credits;
+}
+
+async function freeRetriesLeft(env, userId) {
+  const row = await env.DB.prepare(
+    'SELECT COUNT(*) AS n FROM generations WHERE user_id = ? AND free_retry = 1 AND created_at > ?'
+  )
+    .bind(userId, Date.now() - FREE_RETRY_WINDOW_MS)
+    .first();
+  return Math.max(0, FREE_RETRIES - ((row && row.n) || 0));
+}
+
+async function getBrandKit(env, userId) {
+  return env.DB.prepare('SELECT shop_name, colors, logo_key FROM brand_kits WHERE user_id = ?')
+    .bind(userId)
+    .first();
+}
+
+function itemFromRow(r) {
+  return {
+    id: r.id,
+    batch_id: r.batch_id || r.id,
+    kind: r.kind || 'new',
+    style: r.style,
+    size: r.size || 'square',
+    status: r.status,
+    created_at: r.created_at,
+    input_key: r.input_key,
+    input_url: `/files/${r.input_key}`,
+    output_url: `/files/${r.output_key}`,
+  };
+}
+
+async function saveOutputs(env, user, outputs, meta) {
+  const now = Date.now();
+  const items = [];
+  for (let i = 0; i < outputs.length; i++) {
+    const id = crypto.randomUUID();
+    const outputKey = `outputs/${id}.png`;
+    await env.BUCKET.put(outputKey, outputs[i], { httpMetadata: { contentType: 'image/png' } });
+    const row = {
+      id,
+      user_id: user.id,
+      batch_id: meta.batchId,
+      parent_id: meta.parentId || null,
+      kind: meta.kind,
+      free_retry: meta.freeRetry ? 1 : 0,
+      style: meta.style,
+      size: meta.size,
+      input_key: meta.inputKey,
+      source_key: meta.sourceKey,
+      logo_key: meta.logoKey || null,
+      output_key: outputKey,
+      prompt: meta.prompt,
+      status: 'done',
+      created_at: now + i,
+    };
+    await env.DB.prepare(
+      `INSERT INTO generations (id, user_id, batch_id, parent_id, kind, free_retry, style, size,
+         input_key, source_key, logo_key, output_key, prompt, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    )
+      .bind(
+        row.id, row.user_id, row.batch_id, row.parent_id, row.kind, row.free_retry, row.style, row.size,
+        row.input_key, row.source_key, row.logo_key, row.output_key, row.prompt, row.status, row.created_at
+      )
+      .run();
+    items.push(itemFromRow(row));
+  }
+  return items;
+}
+
 async function generate(request, env) {
   const user = await requireUser(request, env);
-  if (user.credits < 1) fail(402, 'You have no credits left. Buy a pack to continue.');
 
   const form = await request.formData();
   const file = form.get('image');
@@ -233,6 +381,9 @@ async function generate(request, env) {
   const text = style === 'ad' ? String(form.get('text') || '').trim().slice(0, 300) : '';
   const sizeName = String(form.get('size') || 'square');
   const userPrompt = PROMPT_MODES.includes(style) ? String(form.get('prompt') || '').trim().slice(0, 1000) : '';
+  const count = Math.min(MAX_VERSIONS, Math.max(1, parseInt(form.get('count') || '1', 10) || 1));
+  const useCutout = form.get('cutout') === '1';
+  const useBrand = form.get('brand') === '1';
 
   if (!(file instanceof File)) fail(400, 'Please upload a product photo.');
   if (!IMAGE_TYPES.includes(file.type)) fail(400, 'Use a JPG, PNG or WebP image.');
@@ -242,112 +393,256 @@ async function generate(request, env) {
   }
   if (PROMPT_MODES.includes(style) && userPrompt.length < 5) fail(400, 'Please describe the picture you want.');
   if (!Object.prototype.hasOwnProperty.call(SIZES, sizeName)) fail(400, 'Please choose a valid size.');
+  if (user.credits < count) fail(402, 'You do not have enough credits. Buy a pack to continue.');
 
-  const id = crypto.randomUUID();
-  const inputKey = `inputs/${id}`;
-  const outputKey = `outputs/${id}.png`;
-  const prompt = buildPrompt(style, text, userPrompt);
+  const batchId = crypto.randomUUID();
+  const inputKey = `inputs/${batchId}`;
+  const original = { bytes: new Uint8Array(await file.arrayBuffer()), type: file.type, name: file.name || 'product.png' };
+  await env.BUCKET.put(inputKey, original.bytes, { httpMetadata: { contentType: file.type } });
 
-  await env.BUCKET.put(inputKey, await file.arrayBuffer(), {
-    httpMetadata: { contentType: file.type },
+  // Optional clean cutout first. If it fails, quietly use the original photo.
+  let source = original;
+  let sourceKey = inputKey;
+  if (useCutout) {
+    try {
+      const [cut] = await callImageApi(env, [original], CUTOUT_PROMPT, '1024x1024', 1);
+      sourceKey = `inputs/${batchId}-cut`;
+      await env.BUCKET.put(sourceKey, cut, { httpMetadata: { contentType: 'image/png' } });
+      source = { bytes: cut, type: 'image/png', name: 'product.png' };
+    } catch (err) {
+      console.error('Cutout failed, using original', err && err.message);
+    }
+  }
+
+  const images = [source];
+  let prompt = buildPrompt(style, text, userPrompt);
+  let logoKey = null;
+  if (useBrand) {
+    const kit = await getBrandKit(env, user.id);
+    if (kit && kit.logo_key) {
+      const logo = await env.BUCKET.get(kit.logo_key);
+      if (logo) {
+        images.push({
+          bytes: new Uint8Array(await logo.arrayBuffer()),
+          type: (logo.httpMetadata && logo.httpMetadata.contentType) || 'image/png',
+          name: 'logo.png',
+        });
+        logoKey = kit.logo_key;
+      }
+    }
+    prompt += brandPrompt(kit, !!logoKey);
+  }
+
+  let outputs;
+  try {
+    outputs = await callImageApi(env, images, prompt, SIZES[sizeName], count);
+  } catch (err) {
+    await env.BUCKET.delete(inputKey);
+    if (sourceKey !== inputKey) await env.BUCKET.delete(sourceKey);
+    throw err;
+  }
+  outputs = outputs.slice(0, count);
+
+  const credits = await charge(env, user.id, outputs.length);
+  const items = await saveOutputs(env, user, outputs, {
+    batchId, kind: 'new', style, size: sizeName, inputKey, sourceKey, logoKey, prompt,
   });
 
-  const upstreamBody = new FormData();
-  upstreamBody.append('model', env.IMAGE_MODEL);
-  upstreamBody.append('image', file, file.name || 'product.png');
-  upstreamBody.append('prompt', prompt);
-  upstreamBody.append('size', SIZES[sizeName]);
-  upstreamBody.append('n', '1');
+  return json({ items, credits, free_retries_left: await freeRetriesLeft(env, user.id) }, 201);
+}
 
-  let upstream;
-  try {
-    upstream = await fetch(`${env.IMAGE_API_BASE}/images/edits`, {
-      method: 'POST',
-      headers: { Authorization: `Bearer ${env.IMAGE_API_KEY}` },
-      body: upstreamBody,
-    });
-  } catch {
-    await env.BUCKET.delete(inputKey);
-    fail(502, 'The image service could not be reached. You were not charged.');
+async function loadOwnGeneration(env, userId, id) {
+  const row = await env.DB.prepare('SELECT * FROM generations WHERE id = ? AND user_id = ?').bind(id, userId).first();
+  if (!row) fail(404, 'Picture not found.');
+  return row;
+}
+
+// Same photo, same settings, new attempt. Free up to FREE_RETRIES times every 12 hours.
+async function retryGeneration(request, env, id) {
+  const user = await requireUser(request, env);
+  const gen = await loadOwnGeneration(env, user.id, id);
+  const freeLeft = await freeRetriesLeft(env, user.id);
+  const isFree = freeLeft > 0;
+  if (!isFree && user.credits < 1) fail(402, 'No free retries left and no credits. Buy a pack to continue.');
+
+  const images = [await readObject(env, gen.source_key || gen.input_key)];
+  if (gen.logo_key) {
+    const logo = await env.BUCKET.get(gen.logo_key);
+    if (logo) images.push({ bytes: new Uint8Array(await logo.arrayBuffer()), type: 'image/png', name: 'logo.png' });
   }
+  const outputs = await callImageApi(env, images, gen.prompt, SIZES[gen.size] || SIZES.square, 1);
 
-  if (!upstream.ok) {
-    const detail = (await upstream.text()).slice(0, 300);
-    console.error('Image API error', upstream.status, detail);
-    await env.BUCKET.delete(inputKey);
-    fail(502, `The image service returned an error (${upstream.status}). You were not charged. Please try again.`);
-  }
+  const credits = isFree ? user.credits : await charge(env, user.id, 1);
+  const items = await saveOutputs(env, user, outputs.slice(0, 1), {
+    batchId: gen.batch_id || gen.id,
+    parentId: gen.id,
+    kind: 'retry',
+    freeRetry: isFree,
+    style: gen.style,
+    size: gen.size,
+    inputKey: gen.input_key,
+    sourceKey: gen.source_key || gen.input_key,
+    logoKey: gen.logo_key,
+    prompt: gen.prompt,
+  });
+  return json({ items, credits, free_retries_left: await freeRetriesLeft(env, user.id), free: isFree }, 201);
+}
 
-  const data = await upstream.json().catch(() => null);
-  const item = data && data.data && data.data[0];
-  let bytes = null;
+// "Change this": edit a finished picture with a short instruction. Costs 1 credit.
+async function editGeneration(request, env, id) {
+  const user = await requireUser(request, env);
+  const body = await readJson(request);
+  const instruction = String(body.instruction || '').trim().slice(0, 500);
+  if (instruction.length < 3) fail(400, 'Please write what you want to change.');
+  if (user.credits < 1) fail(402, 'You do not have enough credits. Buy a pack to continue.');
 
-  if (item && item.b64_json) {
-    bytes = Uint8Array.from(atob(item.b64_json), (c) => c.charCodeAt(0));
-  } else if (item && item.url) {
-    const img = await fetch(item.url);
-    if (img.ok) bytes = new Uint8Array(await img.arrayBuffer());
-  }
+  const gen = await loadOwnGeneration(env, user.id, id);
+  const prompt =
+    'Edit this product photo. Change only this: ' + instruction +
+    '. Keep the product itself identical (same shape, colors, labels and details) and keep everything else ' +
+    'as it is unless the change asks otherwise. If the change asks for text, write it exactly as given.';
 
-  if (!bytes) {
-    await env.BUCKET.delete(inputKey);
-    fail(502, 'The image service returned no picture. You were not charged.');
-  }
-
-  await env.BUCKET.put(outputKey, bytes, { httpMetadata: { contentType: 'image/png' } });
-
-  // Charge only after success. The WHERE clause prevents going below zero.
-  const charge = await env.DB.prepare('UPDATE users SET credits = credits - 1 WHERE id = ? AND credits > 0')
-    .bind(user.id)
-    .run();
-  if (!charge.meta || charge.meta.changes !== 1) {
-    await env.BUCKET.delete(outputKey);
-    await env.BUCKET.delete(inputKey);
-    fail(402, 'You have no credits left. Buy a pack to continue.');
-  }
-
-  await env.DB.prepare(
-    `INSERT INTO generations (id, user_id, style, size, input_key, output_key, prompt, status, created_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, 'done', ?)`
-  )
-    .bind(id, user.id, style, sizeName, inputKey, outputKey, prompt, Date.now())
-    .run();
-
-  return json(
-    {
-      id,
-      style,
-      size: sizeName,
-      input_key: inputKey,
-      input_url: `/files/${inputKey}`,
-      output_url: `/files/${outputKey}`,
-      credits: user.credits - 1,
-    },
-    201
-  );
+  const outputs = await callImageApi(env, [await readObject(env, gen.output_key)], prompt, SIZES[gen.size] || SIZES.square, 1);
+  const credits = await charge(env, user.id, 1);
+  const items = await saveOutputs(env, user, outputs.slice(0, 1), {
+    batchId: gen.batch_id || gen.id,
+    parentId: gen.id,
+    kind: 'edit',
+    style: gen.style,
+    size: gen.size,
+    inputKey: gen.output_key,
+    sourceKey: gen.output_key,
+    logoKey: null,
+    prompt,
+  });
+  return json({ items, credits, free_retries_left: await freeRetriesLeft(env, user.id) }, 201);
 }
 
 async function listGenerations(request, env) {
   const user = await requireUser(request, env);
   const rows = await env.DB.prepare(
-    `SELECT id, style, size, input_key, output_key, status, created_at
-       FROM generations WHERE user_id = ? ORDER BY created_at DESC LIMIT 50`
+    `SELECT id, batch_id, kind, style, size, input_key, output_key, status, created_at
+       FROM generations WHERE user_id = ? ORDER BY created_at DESC LIMIT 60`
   )
     .bind(user.id)
     .all();
+  return json(rows.results.map(itemFromRow));
+}
 
-  return json(
-    rows.results.map((r) => ({
-      id: r.id,
-      style: r.style,
-      size: r.size || 'square',
-      status: r.status,
-      created_at: r.created_at,
-      input_key: r.input_key,
-      input_url: `/files/${r.input_key}`,
-      output_url: `/files/${r.output_key}`,
-    }))
-  );
+// ---------- Improve my description (Cloudflare Workers AI) ----------
+
+async function improvePrompt(request, env) {
+  await requireUser(request, env);
+  const body = await readJson(request);
+  const input = String(body.prompt || '').trim().slice(0, 600);
+  if (input.length < 2) fail(400, 'Write a few words first.');
+  if (!env.AI) fail(503, 'This feature is not available right now.');
+
+  let result;
+  try {
+    result = await env.AI.run('@cf/meta/llama-3.1-8b-instruct', {
+      messages: [
+        {
+          role: 'system',
+          content:
+            'You improve short descriptions for an AI product-photo generator. Rewrite the user text as one ' +
+            'rich, concrete scene description (40 to 80 words): where the product is, background, surface, ' +
+            'props, light, mood and camera angle. Keep any text the user wants written on the image exactly ' +
+            'as given, in quotes. Never describe changes to the product itself. Answer in the same language ' +
+            'as the user text. Reply with the description only, no title, no quotes around it, no notes.',
+        },
+        { role: 'user', content: input },
+      ],
+      max_tokens: 220,
+    });
+  } catch (err) {
+    console.error('Improve prompt failed', err && err.message);
+    fail(502, 'Could not improve the description right now. Please try again.');
+  }
+  const text = String((result && result.response) || '').trim().replace(/^["'«“]+|["'»”]+$/g, '');
+  if (!text) fail(502, 'Could not improve the description right now. Please try again.');
+  return json({ prompt: text.slice(0, 1000) });
+}
+
+// ---------- Saved settings (presets) ----------
+
+async function listPresets(request, env) {
+  const user = await requireUser(request, env);
+  const rows = await env.DB.prepare('SELECT id, name, data FROM presets WHERE user_id = ? ORDER BY created_at DESC')
+    .bind(user.id)
+    .all();
+  return json(rows.results.map((r) => ({ id: r.id, name: r.name, data: JSON.parse(r.data) })));
+}
+
+async function createPreset(request, env) {
+  const user = await requireUser(request, env);
+  const body = await readJson(request);
+  const name = String(body.name || '').trim().slice(0, 40);
+  if (!name) fail(400, 'Please give these settings a name.');
+  const data = JSON.stringify(body.data || {});
+  if (data.length > 4000) fail(400, 'These settings are too long to save.');
+  const count = await env.DB.prepare('SELECT COUNT(*) AS n FROM presets WHERE user_id = ?').bind(user.id).first();
+  if (count && count.n >= 20) fail(400, 'You can save up to 20 settings. Delete one first.');
+  const id = crypto.randomUUID();
+  await env.DB.prepare('INSERT INTO presets (id, user_id, name, data, created_at) VALUES (?, ?, ?, ?, ?)')
+    .bind(id, user.id, name, data, Date.now())
+    .run();
+  return json({ id, name, data: JSON.parse(data) }, 201);
+}
+
+async function deletePreset(request, env, id) {
+  const user = await requireUser(request, env);
+  await env.DB.prepare('DELETE FROM presets WHERE id = ? AND user_id = ?').bind(id, user.id).run();
+  return json({ ok: true });
+}
+
+// ---------- Brand kit ----------
+
+async function getBrand(request, env) {
+  const user = await requireUser(request, env);
+  const kit = await getBrandKit(env, user.id);
+  return json({
+    shop_name: (kit && kit.shop_name) || '',
+    colors: (kit && kit.colors) || '',
+    logo_url: kit && kit.logo_key ? `/files/${kit.logo_key}` : null,
+  });
+}
+
+async function saveBrand(request, env) {
+  const user = await requireUser(request, env);
+  const form = await request.formData();
+  const shopName = String(form.get('shop_name') || '').trim().slice(0, 60);
+  const colors = String(form.get('colors') || '')
+    .split(',')
+    .map((c) => c.trim())
+    .filter((c) => /^#[0-9a-fA-F]{6}$/.test(c))
+    .slice(0, 3)
+    .join(', ');
+  const logo = form.get('logo');
+  const removeLogo = form.get('remove_logo') === '1';
+
+  const current = await getBrandKit(env, user.id);
+  let logoKey = (current && current.logo_key) || null;
+
+  if (logo instanceof File && logo.size > 0) {
+    if (!['image/png', 'image/jpeg', 'image/webp'].includes(logo.type)) fail(400, 'Logo must be PNG, JPG or WebP.');
+    if (logo.size > 2 * 1024 * 1024) fail(413, 'Logo must be 2 MB or smaller.');
+    const newKey = `logos/${crypto.randomUUID()}`;
+    await env.BUCKET.put(newKey, await logo.arrayBuffer(), { httpMetadata: { contentType: logo.type } });
+    logoKey = newKey;
+  } else if (removeLogo) {
+    logoKey = null;
+  }
+
+  await env.DB.prepare(
+    `INSERT INTO brand_kits (user_id, shop_name, colors, logo_key, updated_at) VALUES (?, ?, ?, ?, ?)
+     ON CONFLICT(user_id) DO UPDATE SET shop_name = excluded.shop_name, colors = excluded.colors,
+       logo_key = excluded.logo_key, updated_at = excluded.updated_at`
+  )
+    .bind(user.id, shopName, colors, logoKey, Date.now())
+    .run();
+
+  return json({ shop_name: shopName, colors, logo_url: logoKey ? `/files/${logoKey}` : null });
 }
 
 // ---------- Private files ----------
@@ -365,7 +660,10 @@ async function serveFile(request, env, key) {
     const receipt = await env.DB.prepare('SELECT 1 FROM payments WHERE user_id = ? AND receipt_key = ?')
       .bind(user.id, key)
       .first();
-    allowed = !!(generation || receipt);
+    const logo = await env.DB.prepare('SELECT 1 FROM brand_kits WHERE user_id = ? AND logo_key = ?')
+      .bind(user.id, key)
+      .first();
+    allowed = !!(generation || receipt || logo);
   }
   if (!allowed) fail(404, 'Not found.');
 
@@ -507,6 +805,26 @@ const routes = [
   { method: 'GET', path: /^\/api\/packs$/, handler: async () => json(PACKS) },
   { method: 'POST', path: /^\/api\/generate$/, handler: (req, env) => generate(req, env) },
   { method: 'GET', path: /^\/api\/generations$/, handler: (req, env) => listGenerations(req, env) },
+  {
+    method: 'POST',
+    path: /^\/api\/generations\/([A-Za-z0-9-]+)\/retry$/,
+    handler: (req, env, url, match) => retryGeneration(req, env, match[1]),
+  },
+  {
+    method: 'POST',
+    path: /^\/api\/generations\/([A-Za-z0-9-]+)\/edit$/,
+    handler: (req, env, url, match) => editGeneration(req, env, match[1]),
+  },
+  { method: 'POST', path: /^\/api\/improve-prompt$/, handler: (req, env) => improvePrompt(req, env) },
+  { method: 'GET', path: /^\/api\/presets$/, handler: (req, env) => listPresets(req, env) },
+  { method: 'POST', path: /^\/api\/presets$/, handler: (req, env) => createPreset(req, env) },
+  {
+    method: 'DELETE',
+    path: /^\/api\/presets\/([A-Za-z0-9-]+)$/,
+    handler: (req, env, url, match) => deletePreset(req, env, match[1]),
+  },
+  { method: 'GET', path: /^\/api\/brand$/, handler: (req, env) => getBrand(req, env) },
+  { method: 'POST', path: /^\/api\/brand$/, handler: (req, env) => saveBrand(req, env) },
   { method: 'POST', path: /^\/api\/payments$/, handler: (req, env) => createPayment(req, env) },
   { method: 'GET', path: /^\/api\/payments$/, handler: (req, env) => listPayments(req, env) },
   {

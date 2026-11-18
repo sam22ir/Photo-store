@@ -16,6 +16,9 @@ database_id = "ab019af2-5dbc-494d-9421-3da116f5f6ee"
 binding = "BUCKET"
 bucket_name = "lamsa-images"
 
+[ai]
+binding = "AI"
+
 [vars]
 IMAGE_MODEL = "gpt-image-2.5"
 IMAGE_API_BASE = "https://api.openai.com/v1"

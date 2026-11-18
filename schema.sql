@@ -49,3 +49,21 @@ CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
 
 -- Migration: image size choice (run once on existing databases; fails if the column already exists)
 ALTER TABLE generations ADD COLUMN size TEXT;
+
+-- Migration 2026-11-18: versions, retries, edits, cutouts, brand kit, saved settings
+ALTER TABLE generations ADD COLUMN batch_id TEXT;
+ALTER TABLE generations ADD COLUMN parent_id TEXT;
+ALTER TABLE generations ADD COLUMN kind TEXT;
+ALTER TABLE generations ADD COLUMN free_retry INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE generations ADD COLUMN source_key TEXT;
+ALTER TABLE generations ADD COLUMN logo_key TEXT;
+CREATE INDEX IF NOT EXISTS idx_generations_retry ON generations(user_id, free_retry, created_at);
+CREATE TABLE IF NOT EXISTS brand_kits (
+  user_id INTEGER PRIMARY KEY REFERENCES users(id),
+  shop_name TEXT, colors TEXT, logo_key TEXT, updated_at INTEGER
+);
+CREATE TABLE IF NOT EXISTS presets (
+  id TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id),
+  name TEXT NOT NULL, data TEXT NOT NULL, created_at INTEGER NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_presets_user ON presets(user_id);

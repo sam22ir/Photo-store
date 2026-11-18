@@ -31,81 +31,167 @@
 <main class="wrap">
   <div class="page-top">
     <h1 style="font-size:2rem;margin:0" data-i18n="dash_title">Make a product picture</h1>
+    <span id="freeRetries" class="hint" aria-live="polite"></span>
   </div>
 
   <div class="app-grid">
-    <section class="card">
-      <h2 class="section-title" style="margin-top:0" data-i18n="upload_title">1. Upload your product photo</h2>
-      <label class="drop" id="drop" for="file">
-        <input type="file" id="file" accept="image/jpeg,image/png,image/webp" hidden>
-        <div id="dropEmpty">
-          <p data-i18n="upload_drop">Drop a photo here or click to choose</p>
-          <p class="hint" data-i18n="upload_hint">JPG, PNG or WebP, up to 8 MB</p>
+    <div class="col">
+      <section class="card">
+        <h2 class="section-title" style="margin-top:0" data-i18n="upload_title">1. Upload your product photo</h2>
+        <label class="drop" id="drop" for="file">
+          <input type="file" id="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+          <span id="dropEmpty">
+            <span class="drop-line" data-i18n="upload_drop">Drop a photo here or click to choose</span>
+            <span class="hint" data-i18n="upload_hint">JPG, PNG or WebP, up to 8 MB</span>
+          </span>
+        </label>
+        <p class="hint" data-i18n="up_multi_hint">You can choose several photos. Each one gets its own picture with the same settings.</p>
+        <div class="thumbs" id="thumbs"></div>
+
+        <h2 class="section-title" data-i18n="choose_mode">2. How do you want it?</h2>
+        <div class="mode-tabs" role="group" aria-label="Mode">
+          <button type="button" class="mode-opt" data-mode="styles" aria-pressed="true" data-i18n="mode_styles">Quick styles</button>
+          <button type="button" class="mode-opt" data-mode="templates" aria-pressed="false" data-i18n="mode_templates">Prompt templates</button>
+          <button type="button" class="mode-opt" data-mode="custom" aria-pressed="false" data-i18n="mode_custom">Write your own</button>
         </div>
-        <img id="preview" alt="" hidden>
-      </label>
 
-      <h2 class="section-title" data-i18n="choose_mode">2. How do you want it?</h2>
-      <div class="mode-tabs" role="group" aria-label="Mode">
-        <button type="button" class="mode-opt" data-mode="styles" aria-pressed="true" data-i18n="mode_styles">Quick styles</button>
-        <button type="button" class="mode-opt" data-mode="templates" aria-pressed="false" data-i18n="mode_templates">Prompt templates</button>
-        <button type="button" class="mode-opt" data-mode="custom" aria-pressed="false" data-i18n="mode_custom">Write your own</button>
-      </div>
-
-      <div id="panelTemplates" hidden>
-        <p class="hint" data-i18n="tpl_hint">Pick a ready-made idea. You can change the words before you generate.</p>
-        <div class="templates" id="templates"></div>
-      </div>
-
-      <div class="field" id="promptField" hidden>
-        <label for="promptText" data-i18n="prompt_label">Describe the picture you want</label>
-        <textarea id="promptText" class="input prompt-box" rows="5" maxlength="1000" data-i18n-ph="prompt_ph" placeholder="e.g. My perfume on a beach at sunset, with sand and small shells around it"></textarea>
-        <div class="prompt-meta">
-          <span class="hint" data-i18n="prompt_hint">Write in Arabic, French or English. Replace anything in [brackets]. Your product always stays the same.</span>
-          <span class="hint" id="promptCount">0 / 1000</span>
+        <div id="panelTemplates" hidden>
+          <p class="hint" data-i18n="tpl_hint">Pick a ready-made idea. You can change the words before you generate.</p>
+          <div class="templates" id="templates"></div>
         </div>
-      </div>
 
-      <div class="styles" id="styles">
-        <button type="button" class="style-opt" data-style="studio" aria-pressed="true">
-          <span data-i18n="st_studio">Studio</span><small data-i18n="st_studio_d">Clean white background with soft shadows.</small>
-        </button>
-        <button type="button" class="style-opt" data-style="luxury" aria-pressed="false">
-          <span data-i18n="st_luxury">Luxury</span><small data-i18n="st_luxury_d">Dark, elegant background with dramatic light.</small>
-        </button>
-        <button type="button" class="style-opt" data-style="outdoor" aria-pressed="false">
-          <span data-i18n="st_outdoor">Outdoor</span><small data-i18n="st_outdoor_d">Natural daylight, lifestyle scene.</small>
-        </button>
-        <button type="button" class="style-opt" data-style="ad" aria-pressed="false">
-          <span data-i18n="st_ad">Ad poster</span><small data-i18n="st_ad_d">Square Instagram ad with your text and price.</small>
-        </button>
-      </div>
+        <div class="field" id="promptField" hidden>
+          <label for="promptText" data-i18n="prompt_label">Describe the picture you want</label>
+          <textarea id="promptText" class="input prompt-box" rows="5" maxlength="1000" data-i18n-ph="prompt_ph" placeholder="e.g. My perfume on a beach at sunset"></textarea>
+          <div class="prompt-meta">
+            <span class="hint" data-i18n="prompt_hint">Write in Arabic, French or English. Replace anything in [brackets]. Your product always stays the same.</span>
+            <span class="hint" id="promptCount">0 / 1000</span>
+          </div>
+          <div class="row-btns">
+            <button type="button" class="btn btn-ghost btn-sm" id="improveBtn">
+              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+              <span data-i18n="improve_btn">Improve my description</span>
+            </button>
+            <button type="button" class="btn btn-ghost btn-sm" id="undoBtn" data-i18n="undo" hidden>Undo</button>
+          </div>
+        </div>
 
-      <h2 class="section-title" data-i18n="size_title">3. Choose a size</h2>
-      <div class="sizes" id="sizes">
-        <button type="button" class="size-opt" data-size="square" aria-pressed="true">
-          <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="4" y="4" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-          <span data-i18n="size_square">Square</span><small data-i18n="size_square_d">Instagram post (1:1)</small>
-        </button>
-        <button type="button" class="size-opt" data-size="tall" aria-pressed="false">
-          <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="7" y="3" width="16" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-          <span data-i18n="size_tall">Tall</span><small data-i18n="size_tall_d">Stories / TikTok (2:3)</small>
-        </button>
-        <button type="button" class="size-opt" data-size="wide" aria-pressed="false">
-          <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="3" y="7" width="24" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-          <span data-i18n="size_wide">Wide</span><small data-i18n="size_wide_d">Facebook (3:2)</small>
-        </button>
-      </div>
+        <div class="styles" id="styles">
+          <button type="button" class="style-opt" data-style="studio" aria-pressed="true">
+            <span data-i18n="st_studio">Studio</span><small data-i18n="st_studio_d">Clean white background with soft shadows.</small>
+          </button>
+          <button type="button" class="style-opt" data-style="luxury" aria-pressed="false">
+            <span data-i18n="st_luxury">Luxury</span><small data-i18n="st_luxury_d">Dark, elegant background with dramatic light.</small>
+          </button>
+          <button type="button" class="style-opt" data-style="outdoor" aria-pressed="false">
+            <span data-i18n="st_outdoor">Outdoor</span><small data-i18n="st_outdoor_d">Natural daylight, lifestyle scene.</small>
+          </button>
+          <button type="button" class="style-opt" data-style="ad" aria-pressed="false">
+            <span data-i18n="st_ad">Ad poster</span><small data-i18n="st_ad_d">Square Instagram ad with your text and price.</small>
+          </button>
+        </div>
 
-      <div class="field" id="textField" hidden>
-        <label for="adText" data-i18n="text_label">Text for the ad (name, price)</label>
-        <input id="adText" class="input" maxlength="300" data-i18n-ph="text_ph" placeholder="e.g. Leather bag - 3500 DA">
-        <span class="hint" data-i18n="text_hint">Write it exactly as it should appear. Arabic, French or English.</span>
-      </div>
+        <div class="field" id="textField" hidden>
+          <label for="adText" data-i18n="text_label">Text for the ad (name, price)</label>
+          <input id="adText" class="input" maxlength="300" data-i18n-ph="text_ph" placeholder="e.g. Leather bag - 3500 DA">
+          <span class="hint" data-i18n="text_hint">Write it exactly as it should appear. Arabic, French or English.</span>
+        </div>
 
-      <div id="alert" class="alert" role="alert" hidden></div>
-      <button id="genBtn" class="btn btn-primary btn-block" type="button" data-i18n="generate">Generate picture</button>
-    </section>
+        <h2 class="section-title" data-i18n="size_title">3. Choose a size</h2>
+        <div class="sizes" id="sizes">
+          <button type="button" class="size-opt" data-size="square" aria-pressed="true">
+            <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="4" y="4" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <span data-i18n="size_square">Square</span><small data-i18n="size_square_d">Instagram post (1:1)</small>
+          </button>
+          <button type="button" class="size-opt" data-size="tall" aria-pressed="false">
+            <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="7" y="3" width="16" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <span data-i18n="size_tall">Tall</span><small data-i18n="size_tall_d">Stories / TikTok (2:3)</small>
+          </button>
+          <button type="button" class="size-opt" data-size="wide" aria-pressed="false">
+            <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="3" y="7" width="24" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <span data-i18n="size_wide">Wide</span><small data-i18n="size_wide_d">Facebook (3:2)</small>
+          </button>
+        </div>
+
+        <h2 class="section-title" data-i18n="opts_title">4. Options</h2>
+        <div class="field">
+          <span class="field-label" id="versionsLabel" data-i18n="versions_label">How many versions?</span>
+          <div class="seg" role="group" aria-labelledby="versionsLabel" id="versions">
+            <button type="button" class="seg-opt" data-count="1" aria-pressed="true">1</button>
+            <button type="button" class="seg-opt" data-count="2" aria-pressed="false">2</button>
+            <button type="button" class="seg-opt" data-count="3" aria-pressed="false">3</button>
+            <button type="button" class="seg-opt" data-count="4" aria-pressed="false">4</button>
+          </div>
+          <span class="hint" data-i18n="versions_hint">Pick the best one. Each version uses 1 credit.</span>
+        </div>
+
+        <label class="check">
+          <input type="checkbox" id="cutout" checked>
+          <span><strong data-i18n="cutout_label">Clean product cutout first (recommended)</strong>
+          <small class="hint" data-i18n="cutout_hint">Removes the messy background first so your product stays sharp and true.</small></span>
+        </label>
+
+        <label class="check">
+          <input type="checkbox" id="useBrand">
+          <span><strong data-i18n="brand_use">Add my brand (logo and colors)</strong>
+          <small class="hint" id="brandHint" data-i18n="brand_none">Set up your brand kit below first.</small></span>
+        </label>
+
+        <div class="presets-box">
+          <span class="field-label" data-i18n="presets_title">My saved settings</span>
+          <div class="chips" id="presets"></div>
+          <div class="row-btns">
+            <label for="presetName" class="sr-only" data-i18n="preset_name_label">Name for these settings</label>
+            <input id="presetName" class="input" maxlength="40" data-i18n-ph="preset_name_ph" placeholder="Name, e.g. My shop style">
+            <button type="button" class="btn btn-ghost btn-sm" id="savePreset" data-i18n="preset_save">Save these settings</button>
+          </div>
+        </div>
+
+        <div id="alert" class="alert" role="alert" hidden></div>
+
+        <div class="progress" id="progress" hidden aria-live="polite">
+          <p class="progress-batch" id="progBatch" hidden></p>
+          <ol class="steps" id="steps">
+            <li data-step="upload"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_upload">Uploading your photo</span></li>
+            <li data-step="cutout"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_cutout">Cleaning up your product</span></li>
+            <li data-step="create"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_create">Creating your picture</span></li>
+            <li data-step="save"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_save">Almost done</span></li>
+          </ol>
+          <p class="hint" id="progTime"></p>
+        </div>
+
+        <button id="genBtn" class="btn btn-primary btn-block" type="button" data-i18n="generate">Generate picture</button>
+        <p class="hint cost" id="cost"></p>
+      </section>
+
+      <details class="card brand-card" id="brandCard">
+        <summary><h2 class="section-title" style="margin:0;display:inline" data-i18n="brand_title">My brand kit</h2></summary>
+        <div class="brand-body">
+          <div class="field">
+            <label for="shopName" data-i18n="brand_shop">Shop name</label>
+            <input id="shopName" class="input" maxlength="60">
+          </div>
+          <div class="field">
+            <span class="field-label" data-i18n="brand_colors">Brand colors</span>
+            <div class="row-btns">
+              <input type="color" id="color1" value="#0B6B52" aria-label="Color 1">
+              <input type="color" id="color2" value="#F2B544" aria-label="Color 2">
+              <label class="check inline"><input type="checkbox" id="useColors"> <span data-i18n="brand_use_colors">Use these colors</span></label>
+            </div>
+          </div>
+          <div class="field">
+            <label for="logoFile" data-i18n="brand_logo">Logo (a PNG with a transparent background works best)</label>
+            <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" class="input">
+            <div class="logo-row" id="logoRow" hidden>
+              <img id="logoPreview" alt="">
+              <button type="button" class="btn btn-ghost btn-sm" id="removeLogo" data-i18n="brand_remove_logo">Remove logo</button>
+            </div>
+          </div>
+          <div id="brandAlert" class="alert" role="alert" hidden></div>
+          <button type="button" class="btn btn-primary btn-sm" id="saveBrand" data-i18n="brand_save">Save brand kit</button>
+        </div>
+      </details>
+    </div>
 
     <section class="card">
       <h2 class="section-title" style="margin-top:0" data-i18n="results_title">Your pictures</h2>
@@ -122,22 +208,80 @@
 <script>
   const $ = (id) => document.getElementById(id);
   const t = (k) => window.i18n.t(k);
+  const fill = (k, vars) => Object.keys(vars).reduce((s, v) => s.replace('{' + v + '}', vars[v]), t(k));
   const alertEl = $('alert');
-  const STYLES = ['studio', 'luxury', 'outdoor', 'ad'];
   const SIZES = { square: '1 / 1', tall: '2 / 3', wide: '3 / 2' };
   const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   const MAX = 8 * 1024 * 1024;
+  const MAX_FILES = 10;
 
   let credits = 0;
+  let freeLeft = 0;
   let style = 'studio';
   let size = 'square';
   let mode = 'styles';
   let templateId = '';
-  let file = null;
+  let count = 1;
+  let files = [];
   let items = [];
+  let presets = [];
+  let brand = { shop_name: '', colors: '', logo_url: null };
+  let undoText = null;
+  let busy = false;
 
+  // ---------- Credits, free retries, cost ----------
   function renderCredits() {
     $('credits').textContent = t('credits_left').replace('{n}', credits);
+    $('freeRetries').textContent = fill('free_retries', { n: freeLeft });
+    renderCost();
+  }
+
+  function renderCost() {
+    const total = count * Math.max(1, files.length);
+    $('cost').textContent = fill(total === 1 ? 'cost_one' : 'cost_many', { n: total });
+  }
+
+  // ---------- Gallery ----------
+  function setBusy(on) {
+    busy = on;
+    document.querySelectorAll('.gen-actions button, #genBtn').forEach((b) => { b.disabled = on; });
+  }
+
+  function addResult(res) {
+    credits = res.credits;
+    if (typeof res.free_retries_left === 'number') freeLeft = res.free_retries_left;
+    items = res.items.concat(items);
+    renderCredits();
+    renderGallery();
+  }
+
+  async function doRetry(g) {
+    hideAlert(alertEl);
+    setBusy(true);
+    try {
+      addResult(await api(`/api/generations/${g.id}/retry`, { method: 'POST' }));
+    } catch (err) {
+      showAlert(alertEl, err.message);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function doEdit(g, instruction, box) {
+    if (instruction.trim().length < 3) {
+      showAlert(alertEl, t('err_no_change'));
+      return;
+    }
+    hideAlert(alertEl);
+    setBusy(true);
+    try {
+      addResult(await api(`/api/generations/${g.id}/edit`, { method: 'POST', body: { instruction } }));
+    } catch (err) {
+      showAlert(alertEl, err.message);
+      box.hidden = false;
+    } finally {
+      setBusy(false);
+    }
   }
 
   function buildCard(g) {
@@ -154,12 +298,23 @@
     const body = document.createElement('div');
     body.className = 'gen-body';
 
+    const meta = document.createElement('div');
+    meta.className = 'gen-meta';
     const styleLabel = document.createElement('span');
     styleLabel.textContent = t('st_' + g.style);
-
     const badge = document.createElement('span');
     badge.className = 'badge size-badge';
     badge.textContent = t('size_' + sizeName);
+    meta.append(styleLabel, badge);
+    if (g.kind === 'retry' || g.kind === 'edit') {
+      const kind = document.createElement('span');
+      kind.className = 'badge kind-badge';
+      kind.textContent = t('kind_' + g.kind);
+      meta.append(kind);
+    }
+
+    const actions = document.createElement('div');
+    actions.className = 'gen-actions';
 
     const download = document.createElement('a');
     download.className = 'btn btn-ghost btn-sm';
@@ -167,7 +322,53 @@
     download.download = `lamsa-${g.id}.png`;
     download.textContent = t('download');
 
-    body.append(styleLabel, badge, download);
+    const retry = document.createElement('button');
+    retry.type = 'button';
+    retry.className = 'btn btn-ghost btn-sm';
+    retry.textContent = `${t('retry_btn')} (${freeLeft > 0 ? t('retry_free') : t('retry_paid')})`;
+    retry.disabled = busy;
+    retry.addEventListener('click', () => doRetry(g));
+
+    const change = document.createElement('button');
+    change.type = 'button';
+    change.className = 'btn btn-ghost btn-sm';
+    change.textContent = t('change_btn');
+    change.disabled = busy;
+
+    actions.append(download, retry, change);
+
+    const editBox = document.createElement('div');
+    editBox.className = 'edit-box';
+    editBox.hidden = true;
+    const editId = 'edit-' + g.id;
+    const editLabel = document.createElement('label');
+    editLabel.htmlFor = editId;
+    editLabel.className = 'sr-only';
+    editLabel.textContent = t('change_btn');
+    const editInput = document.createElement('input');
+    editInput.id = editId;
+    editInput.className = 'input';
+    editInput.maxLength = 500;
+    editInput.placeholder = t('change_ph');
+    const apply = document.createElement('button');
+    apply.type = 'button';
+    apply.className = 'btn btn-primary btn-sm';
+    apply.textContent = t('change_apply');
+    const cancel = document.createElement('button');
+    cancel.type = 'button';
+    cancel.className = 'btn btn-ghost btn-sm';
+    cancel.textContent = t('cancel');
+    editBox.append(editLabel, editInput, apply, cancel);
+
+    change.addEventListener('click', () => {
+      editBox.hidden = !editBox.hidden;
+      if (!editBox.hidden) editInput.focus();
+    });
+    cancel.addEventListener('click', () => { editBox.hidden = true; });
+    apply.addEventListener('click', () => doEdit(g, editInput.value, editBox));
+    editInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') doEdit(g, editInput.value, editBox); });
+
+    body.append(meta, actions, editBox);
     article.append(compare, body);
     return article;
   }
@@ -178,27 +379,20 @@
   }
 
   async function loadGallery() {
-    try {
-      items = await api('/api/generations');
-    } catch (e) {
-      items = [];
-    }
+    try { items = await api('/api/generations'); } catch (e) { items = []; }
     renderGallery();
   }
 
+  // ---------- Modes, styles, templates, sizes, versions ----------
   function setStyle(next) {
     style = next;
-    document.querySelectorAll('.style-opt').forEach((b) => {
-      b.setAttribute('aria-pressed', String(b.dataset.style === next));
-    });
+    document.querySelectorAll('.style-opt').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.style === next)));
     $('textField').hidden = !(mode === 'styles' && next === 'ad');
   }
 
   function setMode(next) {
     mode = next;
-    document.querySelectorAll('.mode-opt').forEach((b) => {
-      b.setAttribute('aria-pressed', String(b.dataset.mode === next));
-    });
+    document.querySelectorAll('.mode-opt').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.mode === next)));
     $('styles').hidden = next !== 'styles';
     $('panelTemplates').hidden = next !== 'templates';
     $('promptField').hidden = next === 'styles' || (next === 'templates' && !templateId);
@@ -217,8 +411,7 @@
 
   function renderTemplates() {
     const lang = window.i18n.lang;
-    const list = window.LAMSA_TEMPLATES || [];
-    $('templates').replaceChildren(...list.map((tp) => {
+    $('templates').replaceChildren(...(window.LAMSA_TEMPLATES || []).map((tp) => {
       const b = document.createElement('button');
       b.type = 'button';
       b.className = 'tpl-opt';
@@ -243,131 +436,318 @@
     $('promptText').focus();
   }
 
-  function pickFile(f) {
-    hideAlert(alertEl);
-    if (!f) return;
-    if (!TYPES.includes(f.type)) {
-      showAlert(alertEl, t('file_type'));
-      return;
-    }
-    if (f.size > MAX) {
-      showAlert(alertEl, t('file_big'));
-      return;
-    }
-    file = f;
-    const preview = $('preview');
-    preview.src = URL.createObjectURL(f);
-    preview.alt = t('preview_alt');
-    preview.hidden = false;
-    $('dropEmpty').hidden = true;
-  }
-
   function setSize(next) {
     size = next;
-    document.querySelectorAll('.size-opt').forEach((b) => {
-      b.setAttribute('aria-pressed', String(b.dataset.size === next));
-    });
+    document.querySelectorAll('.size-opt').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.size === next)));
   }
 
-  document.querySelectorAll('.style-opt').forEach((b) => {
-    b.addEventListener('click', () => setStyle(b.dataset.style));
-  });
+  function setCount(next) {
+    count = next;
+    document.querySelectorAll('.seg-opt').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.count) === next)));
+    renderCost();
+  }
 
-  document.querySelectorAll('.size-opt').forEach((b) => {
-    b.addEventListener('click', () => setSize(b.dataset.size));
-  });
-
-  document.querySelectorAll('.mode-opt').forEach((b) => {
-    b.addEventListener('click', () => setMode(b.dataset.mode));
-  });
-
-  $('promptText').addEventListener('input', updateCount);
-
-  $('file').addEventListener('change', (e) => pickFile(e.target.files[0]));
-
-  const drop = $('drop');
-  ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => {
-    e.preventDefault();
-    drop.classList.add('over');
-  }));
-  ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => {
-    e.preventDefault();
-    drop.classList.remove('over');
-  }));
-  drop.addEventListener('drop', (e) => pickFile(e.dataTransfer.files[0]));
-
-  $('genBtn').addEventListener('click', async () => {
+  // ---------- Files (several at once) ----------
+  function addFiles(list) {
     hideAlert(alertEl);
-    if (!file) {
-      showAlert(alertEl, t('err_no_file'));
-      return;
+    for (const f of Array.from(list || [])) {
+      if (!TYPES.includes(f.type)) { showAlert(alertEl, t('file_type')); continue; }
+      if (f.size > MAX) { showAlert(alertEl, t('file_big')); continue; }
+      if (files.length >= MAX_FILES) { showAlert(alertEl, fill('too_many_files', { n: MAX_FILES })); break; }
+      files.push({ file: f, url: URL.createObjectURL(f) });
     }
-    if (credits < 1) {
-      showAlert(alertEl, t('not_enough'));
-      return;
-    }
+    renderThumbs();
+  }
 
-    const promptValue = $('promptText').value.trim();
-    if (mode !== 'styles') {
-      if (mode === 'templates' && !templateId) {
-        showAlert(alertEl, t('err_no_template'));
-        return;
-      }
-      if (promptValue.length < 5) {
-        showAlert(alertEl, t('err_no_prompt'));
-        return;
-      }
-    }
-
-    const fd = new FormData();
-    fd.append('image', file);
-    fd.append('size', size);
-    if (mode === 'styles') {
-      fd.append('style', style);
-      fd.append('text', $('adText').value);
-    } else {
-      fd.append('style', mode === 'templates' ? 'template' : 'custom');
-      fd.append('prompt', promptValue);
-    }
-
-    const btn = $('genBtn');
-    btn.disabled = true;
-    btn.textContent = t('generating');
-    try {
-      const result = await api('/api/generate', { method: 'POST', form: fd });
-      credits = result.credits;
-      renderCredits();
-      items.unshift({
-        id: result.id,
-        style: result.style,
-        size: result.size,
-        input_url: result.input_url,
-        output_url: result.output_url,
+  function renderThumbs() {
+    $('thumbs').replaceChildren(...files.map((f, i) => {
+      const wrap = document.createElement('div');
+      wrap.className = 'thumb';
+      const img = document.createElement('img');
+      img.src = f.url;
+      img.alt = t('preview_alt') + ' ' + (i + 1);
+      const rm = document.createElement('button');
+      rm.type = 'button';
+      rm.className = 'thumb-rm';
+      rm.setAttribute('aria-label', t('remove_photo'));
+      rm.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+      rm.addEventListener('click', () => {
+        URL.revokeObjectURL(f.url);
+        files.splice(i, 1);
+        renderThumbs();
       });
-      renderGallery();
+      wrap.append(img, rm);
+      return wrap;
+    }));
+    renderCost();
+  }
+
+  // ---------- Improve description ----------
+  async function improve() {
+    const text = $('promptText').value.trim();
+    if (text.length < 2) { showAlert(alertEl, t('err_no_prompt')); return; }
+    hideAlert(alertEl);
+    const btn = $('improveBtn');
+    const label = btn.querySelector('span');
+    btn.disabled = true;
+    label.textContent = t('improving');
+    try {
+      const res = await api('/api/improve-prompt', { method: 'POST', body: { prompt: text } });
+      undoText = $('promptText').value;
+      $('promptText').value = res.prompt;
+      updateCount();
+      $('undoBtn').hidden = false;
     } catch (err) {
       showAlert(alertEl, err.message);
     } finally {
       btn.disabled = false;
-      btn.textContent = t('generate');
+      label.textContent = t('improve_btn');
     }
+  }
+
+  // ---------- Saved settings ----------
+  function currentSettings() {
+    return {
+      mode, style, size, count, templateId,
+      prompt: mode === 'styles' ? '' : $('promptText').value,
+      text: $('adText').value,
+      cutout: $('cutout').checked,
+      brand: $('useBrand').checked,
+    };
+  }
+
+  function applySettings(s) {
+    templateId = s.templateId || '';
+    $('promptText').value = s.prompt || '';
+    $('adText').value = s.text || '';
+    $('cutout').checked = s.cutout !== false;
+    $('useBrand').checked = !!s.brand && !$('useBrand').disabled;
+    updateCount();
+    renderTemplates();
+    setSize(SIZES[s.size] ? s.size : 'square');
+    setCount(Math.min(4, Math.max(1, Number(s.count) || 1)));
+    style = s.style && document.querySelector(`.style-opt[data-style="${s.style}"]`) ? s.style : 'studio';
+    setMode(['styles', 'templates', 'custom'].includes(s.mode) ? s.mode : 'styles');
+    if (s.mode !== 'styles' && (s.prompt || '').length) $('promptField').hidden = false;
+  }
+
+  function renderPresets() {
+    if (!presets.length) {
+      const p = document.createElement('span');
+      p.className = 'hint';
+      p.textContent = t('presets_empty');
+      $('presets').replaceChildren(p);
+      return;
+    }
+    $('presets').replaceChildren(...presets.map((p) => {
+      const chip = document.createElement('span');
+      chip.className = 'chip';
+      const use = document.createElement('button');
+      use.type = 'button';
+      use.className = 'chip-use';
+      use.textContent = p.name;
+      use.addEventListener('click', () => applySettings(p.data));
+      const del = document.createElement('button');
+      del.type = 'button';
+      del.className = 'chip-del';
+      del.setAttribute('aria-label', t('preset_delete') + ' ' + p.name);
+      del.innerHTML = '<svg viewBox="0 0 24 24" width="14" height="14" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>';
+      del.addEventListener('click', async () => {
+        try {
+          await api('/api/presets/' + p.id, { method: 'DELETE' });
+          presets = presets.filter((x) => x.id !== p.id);
+          renderPresets();
+        } catch (err) { showAlert(alertEl, err.message); }
+      });
+      chip.append(use, del);
+      return chip;
+    }));
+  }
+
+  async function savePreset() {
+    const name = $('presetName').value.trim();
+    if (!name) { showAlert(alertEl, t('err_preset_name')); $('presetName').focus(); return; }
+    try {
+      const p = await api('/api/presets', { method: 'POST', body: { name, data: currentSettings() } });
+      presets.unshift(p);
+      $('presetName').value = '';
+      renderPresets();
+      showAlert(alertEl, t('preset_saved'), true);
+    } catch (err) { showAlert(alertEl, err.message); }
+  }
+
+  // ---------- Brand kit ----------
+  function renderBrand() {
+    $('shopName').value = brand.shop_name || '';
+    const colors = (brand.colors || '').split(',').map((c) => c.trim()).filter(Boolean);
+    $('useColors').checked = colors.length > 0;
+    if (colors[0]) $('color1').value = colors[0];
+    if (colors[1]) $('color2').value = colors[1];
+    $('logoRow').hidden = !brand.logo_url;
+    if (brand.logo_url) {
+      $('logoPreview').src = brand.logo_url;
+      $('logoPreview').alt = t('brand_logo_alt');
+    }
+    const hasKit = !!(brand.logo_url || brand.colors || brand.shop_name);
+    $('useBrand').disabled = !hasKit;
+    if (!hasKit) $('useBrand').checked = false;
+    $('brandHint').textContent = hasKit ? t('brand_ready') : t('brand_none');
+  }
+
+  async function saveBrand(removeLogo) {
+    const ba = $('brandAlert');
+    hideAlert(ba);
+    const fd = new FormData();
+    fd.append('shop_name', $('shopName').value);
+    fd.append('colors', $('useColors').checked ? [$('color1').value, $('color2').value].join(',') : '');
+    const logo = $('logoFile').files[0];
+    if (logo) fd.append('logo', logo);
+    if (removeLogo) fd.append('remove_logo', '1');
+    try {
+      brand = await api('/api/brand', { method: 'POST', form: fd });
+      $('logoFile').value = '';
+      renderBrand();
+      showAlert(ba, t('brand_saved'), true);
+    } catch (err) { showAlert(ba, err.message); }
+  }
+
+  // ---------- Progress steps ----------
+  let progTimers = [];
+  function setStep(name) {
+    const order = ['upload', 'cutout', 'create', 'save'];
+    const idx = order.indexOf(name);
+    document.querySelectorAll('#steps li').forEach((li) => {
+      const i = order.indexOf(li.dataset.step);
+      li.className = i < idx ? 'done' : i === idx ? 'active' : '';
+    });
+  }
+
+  function startProgress(useCutout, index, total) {
+    stopProgress();
+    $('progress').hidden = false;
+    $('steps').querySelector('[data-step="cutout"]').hidden = !useCutout;
+    $('progBatch').hidden = total < 2;
+    $('progBatch').textContent = fill('prog_batch', { i: index + 1, n: total });
+    const started = Date.now();
+    setStep('upload');
+    progTimers.push(setTimeout(() => setStep(useCutout ? 'cutout' : 'create'), 2000));
+    if (useCutout) progTimers.push(setTimeout(() => setStep('create'), 20000));
+    const tick = () => { $('progTime').textContent = fill('prog_seconds', { s: Math.round((Date.now() - started) / 1000) }); };
+    tick();
+    progTimers.push(setInterval(tick, 1000));
+  }
+
+  function stopProgress(hide) {
+    progTimers.forEach((id) => { clearTimeout(id); clearInterval(id); });
+    progTimers = [];
+    if (hide) $('progress').hidden = true;
+  }
+
+  // ---------- Generate ----------
+  async function generateAll() {
+    hideAlert(alertEl);
+    if (!files.length) { showAlert(alertEl, t('err_no_file')); return; }
+    const promptValue = $('promptText').value.trim();
+    if (mode === 'templates' && !templateId) { showAlert(alertEl, t('err_no_template')); return; }
+    if (mode !== 'styles' && promptValue.length < 5) { showAlert(alertEl, t('err_no_prompt')); return; }
+    if (credits < count * files.length) { showAlert(alertEl, t('not_enough')); return; }
+
+    const btn = $('genBtn');
+    setBusy(true);
+    btn.textContent = t('generating');
+    const useCutout = $('cutout').checked;
+    let ok = 0;
+    const total = files.length;
+
+    for (let i = 0; i < total; i++) {
+      const fd = new FormData();
+      fd.append('image', files[i].file);
+      fd.append('size', size);
+      fd.append('count', String(count));
+      fd.append('cutout', useCutout ? '1' : '0');
+      fd.append('brand', $('useBrand').checked ? '1' : '0');
+      if (mode === 'styles') {
+        fd.append('style', style);
+        fd.append('text', $('adText').value);
+      } else {
+        fd.append('style', mode === 'templates' ? 'template' : 'custom');
+        fd.append('prompt', promptValue);
+      }
+      startProgress(useCutout, i, total);
+      try {
+        const res = await api('/api/generate', { method: 'POST', form: fd });
+        setStep('save');
+        addResult(res);
+        ok++;
+      } catch (err) {
+        showAlert(alertEl, err.message);
+        if (err.status === 402) break;
+      }
+    }
+
+    stopProgress(true);
+    if (total > 1) showAlert(alertEl, fill('batch_done', { ok, n: total }), ok === total);
+    if (ok === total) {
+      files.forEach((f) => URL.revokeObjectURL(f.url));
+      files = [];
+      renderThumbs();
+    }
+    setBusy(false);
+    btn.textContent = t('generate');
+  }
+
+  // ---------- Events ----------
+  document.querySelectorAll('.style-opt').forEach((b) => b.addEventListener('click', () => setStyle(b.dataset.style)));
+  document.querySelectorAll('.size-opt').forEach((b) => b.addEventListener('click', () => setSize(b.dataset.size)));
+  document.querySelectorAll('.mode-opt').forEach((b) => b.addEventListener('click', () => setMode(b.dataset.mode)));
+  document.querySelectorAll('.seg-opt').forEach((b) => b.addEventListener('click', () => setCount(Number(b.dataset.count))));
+  $('promptText').addEventListener('input', updateCount);
+  $('improveBtn').addEventListener('click', improve);
+  $('undoBtn').addEventListener('click', () => {
+    if (undoText !== null) $('promptText').value = undoText;
+    undoText = null;
+    $('undoBtn').hidden = true;
+    updateCount();
   });
+  $('savePreset').addEventListener('click', savePreset);
+  $('saveBrand').addEventListener('click', () => saveBrand(false));
+  $('removeLogo').addEventListener('click', () => saveBrand(true));
+  $('genBtn').addEventListener('click', generateAll);
+  $('file').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
+
+  const drop = $('drop');
+  ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', (e) => addFiles(e.dataTransfer.files));
 
   document.addEventListener('i18n:change', () => {
     renderCredits();
     renderGallery();
     renderTemplates();
+    renderPresets();
+    renderBrand();
+    renderThumbs();
   });
 
   (async () => {
     const user = await requireUser();
     if (!user) return;
     credits = user.credits;
-    renderCredits();
+    freeLeft = user.free_retries_left || 0;
     if (user.is_admin) $('adminLink').hidden = false;
     renderTemplates();
     setMode(mode);
     setSize(size);
+    setCount(count);
+    renderCredits();
+    const [pr, br] = await Promise.all([
+      api('/api/presets').catch(() => []),
+      api('/api/brand').catch(() => brand),
+    ]);
+    presets = pr;
+    brand = br;
+    renderPresets();
+    renderBrand();
     await loadGallery();
   })();
 </script>
