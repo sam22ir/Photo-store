@@ -15,105 +15,126 @@
   <div class="wrap nav">
     <a class="logo" href="app.html"><span class="logo-mark" aria-hidden="true"></span><span>Lamsa Studio</span></a>
     <div class="nav-right">
-      <span id="credits" class="badge" aria-live="polite">-</span>
-      <a id="adminLink" class="btn btn-ghost btn-sm" href="admin.html" data-i18n="admin_link" hidden>Admin</a>
-      <a class="btn btn-ghost btn-sm" href="buy.html" data-i18n="buy_more">Buy credits</a>
-      <select id="langSel" class="lang" aria-label="Language">
-        <option value="en">English</option>
-        <option value="fr">Français</option>
-        <option value="ar">العربية</option>
-      </select>
-      <a class="btn btn-ghost btn-sm" href="index.html" data-logout data-i18n="logout">Log out</a>
+      <a class="credit-pill" href="buy.html" id="creditPill">
+        <span id="credits">-</span>
+        <span class="pill-sep" aria-hidden="true"></span>
+        <svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false"><path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        <span id="freeRetries">-</span>
+      </a>
+      <details class="menu" id="menu">
+        <summary class="btn btn-ghost btn-sm icon-btn" aria-label="Menu" id="menuBtn">
+          <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+        </summary>
+        <div class="menu-pop">
+          <label class="menu-label" for="langSel" data-i18n="menu_lang">Language</label>
+          <select id="langSel" class="lang" aria-label="Language">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+            <option value="ar">العربية</option>
+          </select>
+          <p class="menu-retries hint" id="retriesFull"></p>
+          <a class="menu-item" href="buy.html" data-i18n="buy_more">Buy credits</a>
+          <a class="menu-item" id="adminLink" href="admin.html" data-i18n="admin_link" hidden>Admin</a>
+          <a class="menu-item" href="index.html" data-logout data-i18n="logout">Log out</a>
+        </div>
+      </details>
     </div>
   </div>
 </header>
 
-<main class="wrap">
-  <div class="page-top">
-    <h1 style="font-size:2rem;margin:0" data-i18n="dash_title">Make a product picture</h1>
-    <span id="freeRetries" class="hint" aria-live="polite"></span>
-  </div>
+<main class="wrap studio">
+  <h1 class="studio-title" data-i18n="dash_title">Make a product picture</h1>
 
-  <div class="app-grid">
-    <div class="col">
-      <section class="card">
-        <h2 class="section-title" style="margin-top:0" data-i18n="upload_title">1. Upload your product photo</h2>
-        <label class="drop" id="drop" for="file" tabindex="0">
-          <input type="file" id="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
-          <span id="dropEmpty">
-            <span class="drop-line" data-i18n="upload_drop">Drop a photo here or click to choose</span>
-            <span class="hint" data-i18n="upload_hint">JPG, PNG or WebP, up to 8 MB</span>
-          </span>
-        </label>
-        <p class="hint" data-i18n="up_multi_hint">You can choose several photos. Each one gets its own picture with the same settings.</p>
-        <div class="thumbs" id="thumbs"></div>
+  <section class="card">
+    <h2 class="section-title step-h" style="margin-top:0"><span class="step-check" id="check1" aria-hidden="true"></span><span data-i18n="upload_title">1. Upload your product photo</span></h2>
+    <div class="upload-box" id="drop">
+      <input type="file" id="file" accept="image/jpeg,image/png,image/webp" multiple hidden>
+      <input type="file" id="camFile" accept="image/*" capture="environment" hidden>
+      <div class="thumbs" id="thumbs"></div>
+      <div class="upload-btns">
+        <button type="button" class="btn btn-primary" id="camBtn">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><path d="M4 8h3l2-3h6l2 3h3v11H4z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="12" cy="13" r="3.5" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+          <span data-i18n="up_camera">Take a photo</span>
+        </button>
+        <button type="button" class="btn btn-ghost" id="galBtn">
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false"><rect x="3" y="4" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/><path d="M3 16l5-5 4 4 3-3 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+          <span data-i18n="up_gallery">Choose from gallery</span>
+        </button>
+      </div>
+      <p class="hint upload-hint" data-i18n="up_multi_hint">You can choose several photos. Each one gets its own picture with the same settings.</p>
+    </div>
 
-        <h2 class="section-title" data-i18n="choose_mode">2. How do you want it?</h2>
-        <div class="mode-tabs" role="group" aria-label="Mode">
-          <button type="button" class="mode-opt" data-mode="styles" aria-pressed="true" data-i18n="mode_styles">Quick styles</button>
-          <button type="button" class="mode-opt" data-mode="templates" aria-pressed="false" data-i18n="mode_templates">Prompt templates</button>
-          <button type="button" class="mode-opt" data-mode="custom" aria-pressed="false" data-i18n="mode_custom">Write your own</button>
-        </div>
+    <h2 class="section-title step-h"><span class="step-check" id="check2" aria-hidden="true"></span><span data-i18n="choose_mode">2. How do you want it?</span></h2>
+    <div class="mode-tabs" role="group" aria-label="Mode">
+      <button type="button" class="mode-opt" data-mode="styles" aria-pressed="true" data-i18n="mode_styles">Quick styles</button>
+      <button type="button" class="mode-opt" data-mode="templates" aria-pressed="false" data-i18n="mode_templates">Prompt templates</button>
+      <button type="button" class="mode-opt" data-mode="custom" aria-pressed="false" data-i18n="mode_custom">Write your own</button>
+    </div>
 
-        <div id="panelTemplates" hidden>
-          <p class="hint" data-i18n="tpl_hint">Pick a ready-made idea. You can change the words before you generate.</p>
-          <div class="templates" id="templates"></div>
-        </div>
+    <div id="panelTemplates" hidden>
+      <p class="hint" data-i18n="tpl_hint">Pick a ready-made idea. You can change the words before you generate.</p>
+      <div class="templates" id="templates"></div>
+    </div>
 
-        <div class="field" id="promptField" hidden>
-          <label for="promptText" data-i18n="prompt_label">Describe the picture you want</label>
-          <textarea id="promptText" class="input prompt-box" rows="5" maxlength="1000" data-i18n-ph="prompt_ph" placeholder="e.g. My perfume on a beach at sunset"></textarea>
-          <div class="prompt-meta">
-            <span class="hint" data-i18n="prompt_hint">Write in Arabic, French or English. Replace anything in [brackets]. Your product always stays the same.</span>
-            <span class="hint" id="promptCount">0 / 1000</span>
-          </div>
-          <div class="row-btns">
-            <button type="button" class="btn btn-ghost btn-sm" id="improveBtn">
-              <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
-              <span data-i18n="improve_btn">Improve my description</span>
-            </button>
-            <button type="button" class="btn btn-ghost btn-sm" id="undoBtn" data-i18n="undo" hidden>Undo</button>
-          </div>
-        </div>
+    <div class="field" id="promptField" hidden>
+      <label for="promptText" data-i18n="prompt_label">Describe the picture you want</label>
+      <textarea id="promptText" class="input prompt-box" rows="5" maxlength="1000" data-i18n-ph="prompt_ph" placeholder="e.g. My perfume on a beach at sunset"></textarea>
+      <div class="prompt-meta">
+        <span class="hint" data-i18n="prompt_hint">Write in Arabic, French or English. Replace anything in [brackets]. Your product always stays the same.</span>
+        <span class="hint" id="promptCount">0 / 1000</span>
+      </div>
+      <div class="row-btns">
+        <button type="button" class="btn btn-ghost btn-sm" id="improveBtn">
+          <svg viewBox="0 0 24 24" width="18" height="18" aria-hidden="true" focusable="false"><path d="M12 3l1.8 4.2L18 9l-4.2 1.8L12 15l-1.8-4.2L6 9l4.2-1.8zM19 15l.9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>
+          <span data-i18n="improve_btn">Improve my description</span>
+        </button>
+        <button type="button" class="btn btn-ghost btn-sm" id="undoBtn" data-i18n="undo" hidden>Undo</button>
+      </div>
+    </div>
 
-        <div class="styles" id="styles">
-          <button type="button" class="style-opt" data-style="studio" aria-pressed="true">
-            <span data-i18n="st_studio">Studio</span><small data-i18n="st_studio_d">Clean white background with soft shadows.</small>
-          </button>
-          <button type="button" class="style-opt" data-style="luxury" aria-pressed="false">
-            <span data-i18n="st_luxury">Luxury</span><small data-i18n="st_luxury_d">Dark, elegant background with dramatic light.</small>
-          </button>
-          <button type="button" class="style-opt" data-style="outdoor" aria-pressed="false">
-            <span data-i18n="st_outdoor">Outdoor</span><small data-i18n="st_outdoor_d">Natural daylight, lifestyle scene.</small>
-          </button>
-          <button type="button" class="style-opt" data-style="ad" aria-pressed="false">
-            <span data-i18n="st_ad">Ad poster</span><small data-i18n="st_ad_d">Square Instagram ad with your text and price.</small>
-          </button>
-        </div>
+    <div class="styles" id="styles">
+      <button type="button" class="style-opt" data-style="studio" aria-pressed="true">
+        <span class="art art-studio" aria-hidden="true"><i></i></span><span class="style-name" data-i18n="st_studio">Studio</span>
+      </button>
+      <button type="button" class="style-opt" data-style="luxury" aria-pressed="false">
+        <span class="art art-luxury" aria-hidden="true"><i></i></span><span class="style-name" data-i18n="st_luxury">Luxury</span>
+      </button>
+      <button type="button" class="style-opt" data-style="outdoor" aria-pressed="false">
+        <span class="art art-outdoor" aria-hidden="true"><i></i></span><span class="style-name" data-i18n="st_outdoor">Outdoor</span>
+      </button>
+      <button type="button" class="style-opt" data-style="ad" aria-pressed="false">
+        <span class="art art-ad" aria-hidden="true"><i></i><b>-30%</b></span><span class="style-name" data-i18n="st_ad">Ad poster</span>
+      </button>
+    </div>
 
-        <div class="field" id="textField" hidden>
-          <label for="adText" data-i18n="text_label">Text for the ad (name, price)</label>
-          <input id="adText" class="input" maxlength="300" data-i18n-ph="text_ph" placeholder="e.g. Leather bag - 3500 DA">
-          <span class="hint" data-i18n="text_hint">Write it exactly as it should appear. Arabic, French or English.</span>
-        </div>
+    <div class="field" id="textField" hidden>
+      <label for="adText" data-i18n="text_label">Text for the ad (name, price)</label>
+      <input id="adText" class="input" maxlength="300" data-i18n-ph="text_ph" placeholder="e.g. Leather bag - 3500 DA">
+      <span class="hint" data-i18n="text_hint">Write it exactly as it should appear. Arabic, French or English.</span>
+    </div>
 
-        <h2 class="section-title" data-i18n="size_title">3. Choose a size</h2>
-        <div class="sizes" id="sizes">
-          <button type="button" class="size-opt" data-size="square" aria-pressed="true">
-            <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="4" y="4" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-            <span data-i18n="size_square">Square</span><small data-i18n="size_square_d">Instagram post (1:1)</small>
-          </button>
-          <button type="button" class="size-opt" data-size="tall" aria-pressed="false">
-            <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="7" y="3" width="16" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-            <span data-i18n="size_tall">Tall</span><small data-i18n="size_tall_d">Stories / TikTok (2:3)</small>
-          </button>
-          <button type="button" class="size-opt" data-size="wide" aria-pressed="false">
-            <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="3" y="7" width="24" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
-            <span data-i18n="size_wide">Wide</span><small data-i18n="size_wide_d">Facebook (3:2)</small>
-          </button>
-        </div>
+    <h2 class="section-title step-h"><span class="step-check done" id="check3" aria-hidden="true"></span><span data-i18n="size_title">3. Choose a size</span></h2>
+    <div class="sizes" id="sizes">
+      <button type="button" class="size-opt" data-size="square" aria-pressed="true">
+        <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="4" y="4" width="22" height="22" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <span data-i18n="size_square">Square</span><small data-i18n="size_square_d">Instagram post (1:1)</small>
+      </button>
+      <button type="button" class="size-opt" data-size="tall" aria-pressed="false">
+        <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="7" y="3" width="16" height="24" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <span data-i18n="size_tall">Tall</span><small data-i18n="size_tall_d">Stories / TikTok (2:3)</small>
+      </button>
+      <button type="button" class="size-opt" data-size="wide" aria-pressed="false">
+        <svg class="shape" viewBox="0 0 30 30" aria-hidden="true" focusable="false"><rect x="3" y="7" width="24" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+        <span data-i18n="size_wide">Wide</span><small data-i18n="size_wide_d">Facebook (3:2)</small>
+      </button>
+    </div>
 
-        <h2 class="section-title" data-i18n="opts_title">4. Options</h2>
+    <details class="more" id="moreOpts">
+      <summary>
+        <span class="more-title" data-i18n="more_title">More options</span>
+        <span class="hint more-sum" id="moreSum"></span>
+      </summary>
+      <div class="more-body">
         <div class="field">
           <span class="field-label" id="versionsLabel" data-i18n="versions_label">How many versions?</span>
           <div class="seg" role="group" aria-labelledby="versionsLabel" id="versions">
@@ -138,6 +159,52 @@
         </label>
         <button type="button" class="link-btn" id="openBrand" data-i18n="brand_open">Set up my brand</button>
 
+        <details class="brand-card" id="brandCard">
+          <summary>
+            <span class="brand-sum">
+              <span class="field-label" data-i18n="brand_title">My brand kit</span>
+              <span class="badge" id="brandStatus"></span>
+            </span>
+          </summary>
+          <div class="brand-body">
+            <p class="hint" data-i18n="brand_intro">Set it up once. Then tick "Add my brand" and your logo and colors go on your pictures.</p>
+            <div class="brand-grid">
+              <div class="brand-form">
+                <span class="field-label" data-i18n="brand_step_logo">1. Your logo</span>
+                <label class="logo-drop" id="logoDrop" for="logoFile" tabindex="0">
+                  <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" hidden>
+                  <img id="logoPreview" alt="" hidden>
+                  <span id="logoEmpty" class="logo-empty">
+                    <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                    <span data-i18n="brand_logo_tap">Tap to add your logo</span>
+                    <small class="hint" data-i18n="brand_logo_tip">PNG with a transparent background works best</small>
+                  </span>
+                </label>
+                <button type="button" class="btn btn-ghost btn-sm" id="removeLogo" data-i18n="brand_remove_logo" hidden>Remove logo</button>
+                <label class="field-label" for="shopName" data-i18n="brand_step_name">2. Shop name</label>
+                <input id="shopName" class="input" maxlength="60" data-i18n-ph="brand_shop_ph" placeholder="e.g. Nafaa Store">
+                <span class="field-label" id="pairsLabel" data-i18n="brand_step_colors">3. Brand colors</span>
+                <div class="pairs" id="pairs" role="group" aria-labelledby="pairsLabel"></div>
+                <div class="row-btns custom-colors">
+                  <span class="hint" data-i18n="brand_custom">Or choose your own:</span>
+                  <input type="color" id="color1" value="#0B6B52" aria-label="Main color">
+                  <input type="color" id="color2" value="#F2B544" aria-label="Second color">
+                </div>
+              </div>
+              <div class="brand-preview-wrap">
+                <span class="field-label" data-i18n="brand_preview">Preview</span>
+                <div class="brand-preview" id="brandPreview" aria-hidden="true">
+                  <div class="bp-product"></div>
+                  <img id="bpLogo" class="bp-logo" alt="" hidden>
+                  <div class="bp-bar" id="bpBar"><span id="bpName">Lamsa</span></div>
+                </div>
+              </div>
+            </div>
+            <div id="brandAlert" class="alert" role="alert" hidden></div>
+            <button type="button" class="btn btn-primary btn-block" id="saveBrand" data-i18n="brand_save">Save my brand</button>
+          </div>
+        </details>
+
         <div class="presets-box">
           <span class="field-label" data-i18n="presets_title">My saved settings</span>
           <div class="chips" id="presets"></div>
@@ -147,83 +214,35 @@
             <button type="button" class="btn btn-ghost btn-sm" id="savePreset" data-i18n="preset_save">Save these settings</button>
           </div>
         </div>
+      </div>
+    </details>
 
-        <div id="alert" class="alert" role="alert" hidden></div>
+    <div id="alert" class="alert" role="alert" hidden></div>
+  </section>
 
-        <div class="progress" id="progress" hidden aria-live="polite">
-          <p class="progress-batch" id="progBatch" hidden></p>
-          <ol class="steps" id="steps">
-            <li data-step="upload"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_upload">Uploading your photo</span></li>
-            <li data-step="cutout"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_cutout">Cleaning up your product</span></li>
-            <li data-step="create"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_create">Creating your picture</span></li>
-            <li data-step="save"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_save">Almost done</span></li>
-          </ol>
-          <p class="hint" id="progTime"></p>
-        </div>
-
-        <button id="genBtn" class="btn btn-primary btn-block" type="button" data-i18n="generate">Generate picture</button>
-        <p class="hint cost" id="cost"></p>
-      </section>
-
-      <details class="card brand-card" id="brandCard">
-        <summary>
-          <span class="brand-sum">
-            <span class="section-title" style="margin:0" data-i18n="brand_title">My brand kit</span>
-            <span class="badge" id="brandStatus"></span>
-          </span>
-        </summary>
-        <div class="brand-body">
-          <p class="hint" data-i18n="brand_intro">Set it up once. Then tick "Add my brand" and your logo and colors go on your pictures.</p>
-
-          <div class="brand-grid">
-            <div class="brand-form">
-              <span class="field-label" data-i18n="brand_step_logo">1. Your logo</span>
-              <label class="logo-drop" id="logoDrop" for="logoFile" tabindex="0">
-                <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp" hidden>
-                <img id="logoPreview" alt="" hidden>
-                <span id="logoEmpty" class="logo-empty">
-                  <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true" focusable="false"><path d="M12 16V4M7 9l5-5 5 5M4 20h16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                  <span data-i18n="brand_logo_tap">Tap to add your logo</span>
-                  <small class="hint" data-i18n="brand_logo_tip">PNG with a transparent background works best</small>
-                </span>
-              </label>
-              <button type="button" class="btn btn-ghost btn-sm" id="removeLogo" data-i18n="brand_remove_logo" hidden>Remove logo</button>
-
-              <label class="field-label" for="shopName" data-i18n="brand_step_name">2. Shop name</label>
-              <input id="shopName" class="input" maxlength="60" data-i18n-ph="brand_shop_ph" placeholder="e.g. Nafaa Store">
-
-              <span class="field-label" id="pairsLabel" data-i18n="brand_step_colors">3. Brand colors</span>
-              <div class="pairs" id="pairs" role="group" aria-labelledby="pairsLabel"></div>
-              <div class="row-btns custom-colors">
-                <span class="hint" data-i18n="brand_custom">Or choose your own:</span>
-                <input type="color" id="color1" value="#0B6B52" aria-label="Main color">
-                <input type="color" id="color2" value="#F2B544" aria-label="Second color">
-              </div>
-            </div>
-
-            <div class="brand-preview-wrap">
-              <span class="field-label" data-i18n="brand_preview">Preview</span>
-              <div class="brand-preview" id="brandPreview" aria-hidden="true">
-                <div class="bp-product"></div>
-                <img id="bpLogo" class="bp-logo" alt="" hidden>
-                <div class="bp-bar" id="bpBar"><span id="bpName">Lamsa</span></div>
-              </div>
-            </div>
-          </div>
-
-          <div id="brandAlert" class="alert" role="alert" hidden></div>
-          <button type="button" class="btn btn-primary btn-block" id="saveBrand" data-i18n="brand_save">Save my brand</button>
-        </div>
-      </details>
+  <section class="card results" id="results">
+    <h2 class="section-title" style="margin-top:0" data-i18n="results_title">Your pictures</h2>
+    <div class="progress" id="progress" hidden aria-live="polite">
+      <p class="progress-batch" id="progBatch" hidden></p>
+      <ol class="steps" id="steps">
+        <li data-step="upload"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_upload">Uploading your photo</span></li>
+        <li data-step="cutout"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_cutout">Cleaning up your product</span></li>
+        <li data-step="create"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_create">Creating your picture</span></li>
+        <li data-step="save"><span class="dot" aria-hidden="true"></span><span data-i18n="prog_save">Almost done</span></li>
+      </ol>
+      <p class="hint" id="progTime"></p>
     </div>
-
-    <section class="card">
-      <h2 class="section-title" style="margin-top:0" data-i18n="results_title">Your pictures</h2>
-      <p id="emptyRes" data-i18n="results_empty">Your pictures will appear here.</p>
-      <div id="gallery" class="gallery"></div>
-    </section>
-  </div>
+    <p id="emptyRes" data-i18n="results_empty">Your pictures will appear here.</p>
+    <div id="gallery" class="gallery"></div>
+  </section>
 </main>
+
+<div class="create-bar">
+  <div class="wrap create-bar-in">
+    <span class="hint" id="cost"></span>
+    <button id="genBtn" class="btn btn-primary" type="button" data-i18n="generate">Generate picture</button>
+  </div>
+</div>
 
 <script src="assets/i18n.js"></script>
 <script src="assets/app.js"></script>
@@ -238,6 +257,11 @@
   const TYPES = ['image/jpeg', 'image/png', 'image/webp'];
   const MAX = 8 * 1024 * 1024;
   const MAX_FILES = 10;
+  const TPL_ART = {
+    marble: ['#ECEAE6', '#FFFFFF'], hand: ['#C9A98A', '#FFF7EE'], flatlay: ['#F6D9E3', '#FFFFFF'],
+    nature: ['#5E8C5A', '#F2F7EF'], food: ['#8A5A3B', '#F7E9D7'], ramadan: ['#2B2350', '#E8B94A'],
+    eid: ['#0F5C46', '#E2C46B'], sale: ['#E63946', '#FFFFFF'], tech: ['#101828', '#4FA3FF'], model: ['#D7C2B0', '#3D434B'],
+  };
 
   let credits = 0;
   let freeLeft = 0;
@@ -256,8 +280,31 @@
   // ---------- Credits, free retries, cost ----------
   function renderCredits() {
     $('credits').textContent = t('credits_left').replace('{n}', credits);
-    $('freeRetries').textContent = fill('free_retries', { n: freeLeft });
+    $('freeRetries').textContent = freeLeft;
+    $('retriesFull').textContent = fill('free_retries', { n: freeLeft });
+    $('creditPill').setAttribute('aria-label', t('credits_left').replace('{n}', credits) + '. ' + fill('free_retries', { n: freeLeft }) + '. ' + t('buy_more'));
     renderCost();
+  }
+
+  function promptReady() {
+    if (mode === 'styles') return true;
+    if (mode === 'templates' && !templateId) return false;
+    return $('promptText').value.trim().length >= 5;
+  }
+
+  const CHECK = '<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true"><path d="M5 12l5 5 9-10" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+  function updateSteps() {
+    [['check1', files.length > 0], ['check2', promptReady()], ['check3', true]].forEach(([id, ok]) => {
+      $(id).classList.toggle('done', ok);
+      $(id).innerHTML = ok ? CHECK : '';
+    });
+  }
+
+  function updateMoreSum() {
+    const parts = [count === 1 ? t('sum_one_version') : fill('sum_versions', { n: count })];
+    parts.push($('cutout').checked ? t('sum_cutout_on') : t('sum_cutout_off'));
+    parts.push($('useBrand').checked ? t('sum_brand_on') : t('sum_brand_off'));
+    $('moreSum').textContent = parts.join(' · ');
   }
 
   function renderCost() {
@@ -412,6 +459,7 @@
     style = next;
     document.querySelectorAll('.style-opt').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.style === next)));
     $('textField').hidden = !(mode === 'styles' && next === 'ad');
+    updateSteps();
   }
 
   function setMode(next) {
@@ -431,6 +479,7 @@
 
   function updateCount() {
     $('promptCount').textContent = $('promptText').value.length + ' / 1000';
+    updateSteps();
   }
 
   function renderTemplates() {
@@ -440,6 +489,13 @@
       b.type = 'button';
       b.className = 'tpl-opt';
       b.setAttribute('aria-pressed', String(tp.id === templateId));
+      const art = document.createElement('span');
+      art.className = 'tpl-art';
+      art.setAttribute('aria-hidden', 'true');
+      const colors = TPL_ART[tp.id] || ['#E7E9EC', '#FFFFFF'];
+      art.style.background = colors[0];
+      art.innerHTML = `<i style="background:${colors[1]}"></i>`;
+      b.append(art);
       const name = document.createElement('span');
       name.textContent = tp.name[lang] || tp.name.en;
       const preview = document.createElement('small');
@@ -469,6 +525,7 @@
     count = next;
     document.querySelectorAll('.seg-opt').forEach((b) => b.setAttribute('aria-pressed', String(Number(b.dataset.count) === next)));
     renderCost();
+    updateMoreSum();
   }
 
   // ---------- Files (several at once) ----------
@@ -504,6 +561,7 @@
       return wrap;
     }));
     renderCost();
+    updateSteps();
   }
 
   // ---------- Improve description ----------
@@ -695,6 +753,7 @@
     renderPairs();
     renderLogoBox();
     renderBrandPreview();
+    updateMoreSum();
   }
 
   // Finds the two most common strong colors in the logo, ignoring white, black and see-through pixels.
@@ -771,6 +830,7 @@
       removeLogoNext = false;
       renderBrand();
       if (!$('useBrand').disabled) $('useBrand').checked = true;
+      updateMoreSum();
       showAlert(ba, t('brand_saved'), true);
     } catch (err) {
       showAlert(ba, err.message);
@@ -793,6 +853,7 @@
   function startProgress(useCutout, index, total) {
     stopProgress();
     $('progress').hidden = false;
+    if (index === 0) $('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
     $('steps').querySelector('[data-step="cutout"]').hidden = !useCutout;
     $('progBatch').hidden = total < 2;
     $('progBatch').textContent = fill('prog_batch', { i: index + 1, n: total });
@@ -896,18 +957,30 @@
   logoDrop.addEventListener('drop', (e) => pickLogo(e.dataTransfer.files[0]));
   $('shopName').addEventListener('input', renderBrandPreview);
   ['color1', 'color2'].forEach((id) => $(id).addEventListener('input', () => { colorsOn = true; renderPairs(); renderBrandPreview(); }));
-  [['drop', 'file'], ['logoDrop', 'logoFile']].forEach(([zone, input]) => {
+  [['logoDrop', 'logoFile']].forEach(([zone, input]) => {
     $(zone).addEventListener('keydown', (e) => {
       if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $(input).click(); }
     });
   });
   $('openBrand').addEventListener('click', () => {
+    $('moreOpts').open = true;
     $('brandCard').open = true;
     $('brandCard').scrollIntoView({ behavior: 'smooth', block: 'start' });
     setTimeout(() => $('logoDrop').focus(), 400);
   });
   $('genBtn').addEventListener('click', generateAll);
   $('file').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
+  $('camFile').addEventListener('change', (e) => { addFiles(e.target.files); e.target.value = ''; });
+  $('camBtn').addEventListener('click', () => $('camFile').click());
+  $('galBtn').addEventListener('click', () => $('file').click());
+  $('cutout').addEventListener('change', updateMoreSum);
+  $('useBrand').addEventListener('change', updateMoreSum);
+  document.addEventListener('click', (e) => {
+    if ($('menu').open && !$('menu').contains(e.target)) $('menu').open = false;
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('menu').open) { $('menu').open = false; $('menuBtn').focus(); }
+  });
 
   const drop = $('drop');
   ['dragenter', 'dragover'].forEach((ev) => drop.addEventListener(ev, (e) => { e.preventDefault(); drop.classList.add('over'); }));
@@ -921,6 +994,7 @@
     renderPresets();
     renderBrand();
     renderThumbs();
+    updateMoreSum();
   });
 
   (async () => {
@@ -934,6 +1008,7 @@
     setSize(size);
     setCount(count);
     renderCredits();
+    updateSteps();
     const [pr, br] = await Promise.all([
       api('/api/presets').catch(() => []),
       api('/api/brand').catch(() => brand),
