@@ -67,3 +67,7 @@ CREATE TABLE IF NOT EXISTS presets (
   name TEXT NOT NULL, data TEXT NOT NULL, created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_presets_user ON presets(user_id);
+
+-- Migration 2026-11-18: Chargily online payments
+ALTER TABLE payments ADD COLUMN checkout_id TEXT;
+CREATE INDEX IF NOT EXISTS idx_payments_checkout ON payments(checkout_id);

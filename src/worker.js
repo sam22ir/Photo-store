@@ -1,9 +1,10 @@
 // Lamsa Studio - Cloudflare Worker (API and private file access). No dependencies.
 
 const PACKS = [
-  { id: 'starter', credits: 10, dzd: 1000 },
-  { id: 'shop', credits: 30, dzd: 2500 },
-  { id: 'pro', credits: 100, dzd: 6000 },
+  // 20 DZD per picture.
+  { id: 'starter', credits: 10, dzd: 200 },
+  { id: 'shop', credits: 30, dzd: 600 },
+  { id: 'pro', credits: 100, dzd: 2000 },
 ];
 
 const STYLES = {
@@ -25,6 +26,7 @@ const SESSION_MS = 365 * 24 * 3600 * 1000; // stay signed in for a year
 const RENEW_AFTER_MS = 24 * 3600 * 1000; // push the expiry forward at most once a day
 const renewals = new WeakMap();
 const METHODS = ['baridimob', 'ccp'];
+const CHARGILY_LIVE = 'https://pay.chargily.net/api/v2';
 const STATUSES = ['pending', 'approved', 'rejected'];
 const KEY_PATTERN = /^(inputs|outputs|receipts|logos)\/[A-Za-z0-9-]+(\.[a-z]+)?$/;
 
@@ -813,6 +815,109 @@ async function createPayment(request, env) {
   );
 }
 
+// ---------- Chargily Pay (EDAHABIA / CIB) ----------
+
+// Creates a Chargily checkout for a pack and returns the payment page address.
+async function createCheckout(request, env, url) {
+  const user = await requireUser(request, env);
+  if (!env.CHARGILY_SECRET_KEY) fail(503, 'Online payment is not set up yet. Please try again later.');
+  const body = await readJson(request);
+  const pack = PACKS.find((p) => p.id === String(body.pack || ''));
+  if (!pack) fail(400, 'Please choose a credit pack.');
+  const locale = ['ar', 'fr', 'en'].includes(body.locale) ? body.locale : 'ar';
+
+  const id = crypto.randomUUID();
+  const origin = url.origin;
+  await env.DB.prepare(
+    `INSERT INTO payments (id, user_id, pack, amount_dzd, credits, method, receipt_key, status, created_at)
+     VALUES (?, ?, ?, ?, ?, 'chargily', '', 'pending', ?)`
+  )
+    .bind(id, user.id, pack.id, pack.dzd, pack.credits, Date.now())
+    .run();
+
+  let res;
+  try {
+    res = await fetch(`${env.CHARGILY_API_BASE || CHARGILY_LIVE}/checkouts`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${env.CHARGILY_SECRET_KEY}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        amount: pack.dzd,
+        currency: 'dzd',
+        success_url: `${origin}/buy.html?paid=${id}`,
+        failure_url: `${origin}/buy.html?failed=${id}`,
+        webhook_endpoint: `${origin}/api/chargily/webhook`,
+        description: `Lamsa Studio - ${pack.credits} credits`,
+        locale,
+        chargily_pay_fees_allocation: 'merchant',
+        metadata: { payment_id: id, user_id: String(user.id) },
+      }),
+    });
+  } catch {
+    await env.DB.prepare("UPDATE payments SET status = 'rejected' WHERE id = ?").bind(id).run();
+    fail(502, 'Could not reach the payment service. Please try again.');
+  }
+  const data = await res.json().catch(() => null);
+  if (!res.ok || !data || !data.checkout_url) {
+    console.error('Chargily error', res.status, JSON.stringify(data).slice(0, 300));
+    await env.DB.prepare("UPDATE payments SET status = 'rejected' WHERE id = ?").bind(id).run();
+    fail(502, 'The payment service refused the request. Please try again.');
+  }
+  await env.DB.prepare('UPDATE payments SET checkout_id = ? WHERE id = ?').bind(data.id, id).run();
+  return json({ checkout_url: data.checkout_url, payment_id: id }, 201);
+}
+
+async function hmacHex(secret, text) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return toHex(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(text)));
+}
+
+// Chargily calls this when a payment is paid, failed or canceled. Credits are added only for a
+// correctly signed "checkout.paid" event whose amount matches, and only once per payment.
+async function chargilyWebhook(request, env) {
+  const raw = await request.text();
+  const signature = (request.headers.get('signature') || '').trim().toLowerCase();
+  if (!env.CHARGILY_SECRET_KEY || !signature) return new Response('Bad signature', { status: 403 });
+  const expected = await hmacHex(env.CHARGILY_SECRET_KEY, raw);
+  if (!safeEqual(signature, expected)) return new Response('Bad signature', { status: 403 });
+
+  let event;
+  try { event = JSON.parse(raw); } catch { return new Response('Bad body', { status: 400 }); }
+  const checkout = (event && event.data) || {};
+  const meta = checkout.metadata || {};
+  const payment = await env.DB.prepare('SELECT * FROM payments WHERE checkout_id = ? OR id = ? LIMIT 1')
+    .bind(String(checkout.id || ''), String(meta.payment_id || ''))
+    .first();
+  if (!payment) return new Response('OK', { status: 200 });
+
+  if (event.type === 'checkout.paid' && checkout.status === 'paid') {
+    if (Number(checkout.amount) !== Number(payment.amount_dzd)) {
+      console.error('Chargily amount mismatch', payment.id, checkout.amount, payment.amount_dzd);
+      return new Response('OK', { status: 200 });
+    }
+    const done = await env.DB.prepare(
+      "UPDATE payments SET status = 'approved', reviewed_at = ? WHERE id = ? AND status = 'pending' RETURNING user_id, credits"
+    )
+      .bind(Date.now(), payment.id)
+      .first();
+    if (done) {
+      await env.DB.prepare('UPDATE users SET credits = credits + ? WHERE id = ?').bind(done.credits, done.user_id).run();
+    }
+  } else if (event.type === 'checkout.failed' || event.type === 'checkout.canceled' || event.type === 'checkout.expired') {
+    await env.DB.prepare("UPDATE payments SET status = 'rejected', reviewed_at = ? WHERE id = ? AND status = 'pending'")
+      .bind(Date.now(), payment.id)
+      .run();
+  }
+  return new Response('OK', { status: 200 });
+}
+
+async function paymentStatus(request, env, id) {
+  const user = await requireUser(request, env);
+  const row = await env.DB.prepare('SELECT status, credits FROM payments WHERE id = ? AND user_id = ?').bind(id, user.id).first();
+  if (!row) fail(404, 'Payment not found.');
+  const me = await env.DB.prepare('SELECT credits FROM users WHERE id = ?').bind(user.id).first();
+  return json({ status: row.status, credits_added: row.credits, credits: me.credits });
+}
+
 async function listPayments(request, env) {
   const user = await requireUser(request, env);
   const rows = await env.DB.prepare(
@@ -823,7 +928,7 @@ async function listPayments(request, env) {
     .all();
 
   return json(
-    rows.results.map(({ receipt_key, ...rest }) => ({ ...rest, receipt_url: `/files/${receipt_key}` }))
+    rows.results.map(({ receipt_key, ...rest }) => ({ ...rest, receipt_url: receipt_key ? `/files/${receipt_key}` : null }))
   );
 }
 
@@ -844,7 +949,7 @@ async function adminListPayments(request, env, url) {
     .all();
 
   return json(
-    rows.results.map(({ receipt_key, ...rest }) => ({ ...rest, receipt_url: `/files/${receipt_key}` }))
+    rows.results.map(({ receipt_key, ...rest }) => ({ ...rest, receipt_url: receipt_key ? `/files/${receipt_key}` : null }))
   );
 }
 
@@ -926,6 +1031,13 @@ const routes = [
   { method: 'GET', path: /^\/api\/brand$/, handler: (req, env) => getBrand(req, env) },
   { method: 'POST', path: /^\/api\/brand$/, handler: (req, env) => saveBrand(req, env) },
   { method: 'POST', path: /^\/api\/payments$/, handler: (req, env) => createPayment(req, env) },
+  { method: 'POST', path: /^\/api\/checkout$/, handler: (req, env, url) => createCheckout(req, env, url) },
+  { method: 'POST', path: /^\/api\/chargily\/webhook$/, handler: (req, env) => chargilyWebhook(req, env) },
+  {
+    method: 'GET',
+    path: /^\/api\/payments\/([A-Za-z0-9-]+)$/,
+    handler: (req, env, url, match) => paymentStatus(req, env, match[1]),
+  },
   { method: 'GET', path: /^\/api\/payments$/, handler: (req, env) => listPayments(req, env) },
   {
     method: 'GET',
