@@ -281,3 +281,16 @@ a { color: inherit; }
   .hero .bushes { height: 160px; }
   .statement { padding: 80px 0 60px; }
 }
+
+/* Top bar on narrow phones: never wrap, keep it to logo + language + one button */
+.nav .btn, .lang { white-space: nowrap; }
+.nav-right { flex-wrap: nowrap; min-width: 0; }
+@media (max-width: 480px) {
+  .nav-in { height: 64px; gap: 8px; }
+  #navAuth { display: none; }
+  .nav .btn { min-height: 44px; padding: 8px 14px; font-size: 0.875rem; }
+  .lang { padding: 0 6px; font-size: 0.8rem; }
+  .logo-mark { width: 28px; height: 28px; }
+}
+/* No green ring when tapping the language picker with a finger */
+.lang:focus:not(:focus-visible) { outline: none; }
