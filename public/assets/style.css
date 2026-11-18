@@ -503,3 +503,4 @@ input[type="color"] { width: 52px; height: 44px; border: 1px solid var(--border)
 .menu > summary.icon-btn { display: inline-grid; min-height: 44px; height: 44px; }
 .tpl-opt small { display: -webkit-box; -webkit-line-clamp: 2; }
 .tpl-opt[aria-pressed="true"] small { -webkit-line-clamp: unset; }
+.more > summary { align-items: flex-start; text-align: start; }
