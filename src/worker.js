@@ -986,6 +986,19 @@ async function adminReview(request, env, paymentId, action) {
   return json({ ok: true, status: 'rejected' });
 }
 
+async function adminModels(request, env) {
+  await requireAdmin(request, env);
+  if (!env.IMAGE_API_KEY) fail(500, 'IMAGE_API_KEY is not set.');
+  const res = await fetch(`${env.IMAGE_API_BASE}/models`, {
+    headers: { Authorization: `Bearer ${env.IMAGE_API_KEY}` },
+  });
+  const text = await res.text();
+  let data;
+  try { data = JSON.parse(text); } catch { data = { raw: text.slice(0, 2000) }; }
+  const ids = Array.isArray(data?.data) ? data.data.map((m) => m.id) : null;
+  return json({ status: res.status, current: env.IMAGE_MODEL, ids, data: ids ? undefined : data });
+}
+
 async function adminStats(request, env) {
   await requireAdmin(request, env);
   const users = await env.DB.prepare('SELECT COUNT(*) AS n FROM users').first();
@@ -1049,6 +1062,7 @@ const routes = [
     path: /^\/api\/admin\/payments\/([^/]+)\/(approve|reject)$/,
     handler: (req, env, url, match) => adminReview(req, env, match[1], match[2]),
   },
+  { method: 'GET', path: /^\/api\/admin\/models$/, handler: (req, env) => adminModels(req, env) },
   { method: 'GET', path: /^\/api\/admin\/stats$/, handler: (req, env) => adminStats(req, env) },
 ];
 
